@@ -5,6 +5,10 @@ export async function listProtocols(categoryId) {
   return apiFetch(`/protocols${query}`);
 }
 
+export async function listProtocolsByCategory(categoryId) {
+  return apiFetch(`/protocols?categoryId=${categoryId}`);
+}
+
 export async function findProtocolById(id) {
   return apiFetch(`/protocols/${id}`);
 }

@@ -7,19 +7,19 @@ export async function listCategories() {
 export async function createCategory(data) {
   return apiFetch("/categories", {
     method: "POST",
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 }
 
 export async function updateCategory(id, data) {
   return apiFetch(`/categories/${id}`, {
     method: "PUT",
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 }
 
 export async function deleteCategory(id) {
   return apiFetch(`/categories/${id}`, {
-    method: "DELETE"
+    method: "DELETE",
   });
 }

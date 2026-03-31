@@ -191,183 +191,348 @@ export default function NewOccurrence() {
   }
 
   return (
-    <div style={{ padding: "24px" }}>
-      <h1>Nova Ocorrência</h1>
-      <p>Crie uma ocorrência usando categoria e protocolo.</p>
+    <div style={pageStyle}>
+      <div style={pageHeaderStyle}>
+        <div>
+          <h1 style={pageTitleStyle}>Nova Ocorrência</h1>
+          <p style={pageSubtitleStyle}>
+            Crie uma ocorrência a partir de uma categoria e de um protocolo configurado.
+          </p>
+        </div>
+      </div>
 
       {error && <div style={errorStyle}>{error}</div>}
       {success && <div style={successStyle}>{success}</div>}
 
-      <form onSubmit={handleSubmit} style={cardStyle}>
-        <div>
-          <label>Categoria</label>
-          <select
-            value={form.categoryId}
-            onChange={handleCategoryChange}
-            style={inputStyle}
-          >
-            <option value="">Selecione a categoria</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div style={pageGridStyle}>
+        <form onSubmit={handleSubmit} style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h2 style={cardTitleStyle}>Dados da ocorrência</h2>
+            <p style={cardSubtitleStyle}>
+              Escolha o protocolo e preencha as informações necessárias.
+            </p>
+          </div>
 
-        <div>
-          <label>Protocolo</label>
-          <select
-            value={form.protocolId}
-            onChange={handleProtocolChange}
-            style={inputStyle}
-            disabled={!form.categoryId || loadingProtocols}
-          >
-            <option value="">
-              {loadingProtocols ? "Carregando protocolos..." : "Selecione o protocolo"}
-            </option>
-            {protocols.map((protocol) => (
-              <option key={protocol.id} value={protocol.id}>
-                {protocol.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div style={formGridStyle}>
+            <div>
+              <label style={labelStyle}>Categoria</label>
+              <select
+                value={form.categoryId}
+                onChange={handleCategoryChange}
+                style={inputStyle}
+              >
+                <option value="">Selecione a categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label>Placa</label>
-          <input
-            type="text"
-            name="plate"
-            value={form.plate}
-            onChange={handleInputChange}
-            placeholder="Ex: ABC1234"
-            style={inputStyle}
-          />
-        </div>
+            <div>
+              <label style={labelStyle}>Protocolo</label>
+              <select
+                value={form.protocolId}
+                onChange={handleProtocolChange}
+                style={inputStyle}
+                disabled={!form.categoryId || loadingProtocols}
+              >
+                <option value="">
+                  {loadingProtocols ? "Carregando protocolos..." : "Selecione o protocolo"}
+                </option>
+                {protocols.map((protocol) => (
+                  <option key={protocol.id} value={protocol.id}>
+                    {protocol.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {selectedProtocol?.fields?.length > 0 && (
-          <div>
-            <h3>Campos do protocolo</h3>
-
-            <div style={{ display: "grid", gap: "12px" }}>
-              {selectedProtocol.fields.map((field) => (
-                <div key={field.id ?? field.fieldKey}>
-                  <label>
-                    {field.fieldLabel}
-                    {field.required ? " *" : ""}
-                  </label>
-
-                  {field.fieldType === "TEXTAREA" ? (
-                    <textarea
-                      value={form.dynamicFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        handleDynamicFieldChange(field.fieldKey, e.target.value)
-                      }
-                      rows={4}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    <input
-                      type={field.fieldType === "NUMBER" ? "number" : "text"}
-                      value={form.dynamicFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        handleDynamicFieldChange(field.fieldKey, e.target.value)
-                      }
-                      style={inputStyle}
-                    />
-                  )}
-                </div>
-              ))}
+            <div>
+              <label style={labelStyle}>Placa</label>
+              <input
+                type="text"
+                name="plate"
+                value={form.plate}
+                onChange={handleInputChange}
+                placeholder="Ex: ABC1234"
+                style={inputStyle}
+              />
             </div>
           </div>
-        )}
 
-        <div>
-          <label>Observação / descrição adicional</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleInputChange}
-            rows={4}
-            style={inputStyle}
-          />
+          {selectedProtocol?.fields?.length > 0 && (
+            <div>
+              <div style={sectionTitleRowStyle}>
+                <h3 style={sectionTitleStyle}>Campos do protocolo</h3>
+                <span style={sectionHintStyle}>Preencha os campos dinâmicos abaixo.</span>
+              </div>
+
+              <div style={dynamicFieldsGridStyle}>
+                {selectedProtocol.fields.map((field) => (
+                  <div key={field.id ?? field.fieldKey} style={fieldCardStyle}>
+                    <label style={labelStyle}>
+                      {field.fieldLabel}
+                      {field.required ? " *" : ""}
+                    </label>
+
+                    {field.fieldType === "TEXTAREA" ? (
+                      <textarea
+                        value={form.dynamicFields[field.fieldKey] || ""}
+                        onChange={(e) =>
+                          handleDynamicFieldChange(field.fieldKey, e.target.value)
+                        }
+                        rows={4}
+                        style={textareaStyle}
+                      />
+                    ) : (
+                      <input
+                        type={field.fieldType === "NUMBER" ? "number" : "text"}
+                        value={form.dynamicFields[field.fieldKey] || ""}
+                        onChange={(e) =>
+                          handleDynamicFieldChange(field.fieldKey, e.target.value)
+                        }
+                        style={inputStyle}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label style={labelStyle}>Observação / descrição adicional</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleInputChange}
+              rows={4}
+              style={textareaStyle}
+            />
+          </div>
+
+          <button type="submit" disabled={saving} style={primaryButtonStyle}>
+            {saving ? "Salvando..." : "Criar ocorrência"}
+          </button>
+        </form>
+
+        <div style={previewCardStyle}>
+          <div style={cardHeaderStyle}>
+            <h2 style={cardTitleStyle}>Prévia dos textos</h2>
+            <p style={cardSubtitleStyle}>
+              Os textos serão gerados com base no protocolo e nos dados informados.
+            </p>
+          </div>
+
+          <div style={previewSectionStyle}>
+            <div style={previewHeaderStyle}>
+              <h3 style={previewTitleStyle}>Texto para responsáveis</h3>
+            </div>
+            <pre style={preStyle}>{generatedTexts.textoResponsaveis}</pre>
+          </div>
+
+          <div style={previewSectionStyle}>
+            <div style={previewHeaderStyle}>
+              <h3 style={previewTitleStyle}>Texto para motorista</h3>
+            </div>
+            <pre style={preStyle}>{generatedTexts.textoMotorista}</pre>
+          </div>
+
+          <div style={previewSectionStyle}>
+            <div style={previewHeaderStyle}>
+              <h3 style={previewTitleStyle}>Texto interno</h3>
+            </div>
+            <pre style={preStyle}>{generatedTexts.textoInterno}</pre>
+          </div>
         </div>
-
-        <div style={previewBoxStyle}>
-          <h3>Texto para responsáveis</h3>
-          <pre style={preStyle}>{generatedTexts.textoResponsaveis}</pre>
-
-          <h3>Texto para motorista</h3>
-          <pre style={preStyle}>{generatedTexts.textoMotorista}</pre>
-
-          <h3>Texto interno</h3>
-          <pre style={preStyle}>{generatedTexts.textoInterno}</pre>
-        </div>
-
-        <button type="submit" disabled={saving} style={buttonStyle}>
-          {saving ? "Salvando..." : "Criar ocorrência"}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
 
+const pageStyle = {
+  display: "grid",
+  gap: "20px",
+};
+
+const pageHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+};
+
+const pageTitleStyle = {
+  margin: 0,
+  fontSize: "30px",
+  color: "#0f172a",
+  fontWeight: "800",
+};
+
+const pageSubtitleStyle = {
+  margin: "8px 0 0",
+  color: "#64748b",
+};
+
+const pageGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "1.05fr 0.95fr",
+  gap: "20px",
+  alignItems: "start",
+};
+
 const cardStyle = {
   display: "grid",
-  gap: "16px",
+  gap: "18px",
   background: "white",
-  padding: "20px",
-  borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  padding: "22px",
+  borderRadius: "18px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+};
+
+const previewCardStyle = {
+  display: "grid",
+  gap: "18px",
+  background: "white",
+  padding: "22px",
+  borderRadius: "18px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+  position: "sticky",
+  top: "24px",
+};
+
+const cardHeaderStyle = {
+  marginBottom: "2px",
+};
+
+const cardTitleStyle = {
+  margin: 0,
+  color: "#0f172a",
+  fontSize: "22px",
+  fontWeight: "800",
+};
+
+const cardSubtitleStyle = {
+  margin: "8px 0 0",
+  color: "#64748b",
+};
+
+const formGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: "16px",
+};
+
+const labelStyle = {
+  display: "block",
+  marginBottom: "8px",
+  fontWeight: "700",
+  color: "#0f172a",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "10px 12px",
-  marginTop: "6px",
-  borderRadius: "8px",
+  padding: "12px 14px",
+  borderRadius: "12px",
   border: "1px solid #cbd5e1",
   boxSizing: "border-box",
 };
 
-const buttonStyle = {
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  padding: "10px 14px",
-  borderRadius: "8px",
-  cursor: "pointer",
+const textareaStyle = {
+  ...inputStyle,
+  resize: "vertical",
+  whiteSpace: "pre-wrap",
 };
 
-const previewBoxStyle = {
+const sectionTitleRowStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "12px",
+  marginBottom: "12px",
+};
+
+const sectionTitleStyle = {
+  margin: 0,
+  color: "#0f172a",
+  fontSize: "20px",
+  fontWeight: "800",
+};
+
+const sectionHintStyle = {
+  color: "#64748b",
+  fontSize: "13px",
+  fontWeight: "600",
+};
+
+const dynamicFieldsGridStyle = {
+  display: "grid",
+  gap: "14px",
+};
+
+const fieldCardStyle = {
   background: "#f8fafc",
   border: "1px solid #e2e8f0",
+  borderRadius: "14px",
   padding: "16px",
-  borderRadius: "10px",
+};
+
+const previewSectionStyle = {
+  display: "grid",
+  gap: "10px",
+};
+
+const previewHeaderStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+};
+
+const previewTitleStyle = {
+  margin: 0,
+  fontSize: "18px",
+  fontWeight: "800",
+  color: "#0f172a",
 };
 
 const preStyle = {
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
-  background: "white",
-  padding: "12px",
-  borderRadius: "8px",
-  border: "1px solid #e5e7eb",
+  background: "#f8fafc",
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid #e2e8f0",
+  color: "#0f172a",
+  lineHeight: 1.6,
+  margin: 0,
+  fontFamily: "inherit",
+};
+
+const primaryButtonStyle = {
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  cursor: "pointer",
+  fontWeight: "800",
 };
 
 const errorStyle = {
-  marginBottom: "16px",
   padding: "12px",
-  borderRadius: "8px",
+  borderRadius: "12px",
   background: "#fee2e2",
   color: "#991b1b",
+  border: "1px solid #fecaca",
 };
 
 const successStyle = {
-  marginBottom: "16px",
   padding: "12px",
-  borderRadius: "8px",
+  borderRadius: "12px",
   background: "#dcfce7",
   color: "#166534",
+  border: "1px solid #86efac",
 };

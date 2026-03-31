@@ -8,6 +8,8 @@ import NewOccurrence from "./pages/NewOccurrence";
 import OccurrenceDetails from "./pages/OccurrenceDetails";
 import Categories from "./pages/Categories";
 import NewProtocol from "./pages/NewProtocol";
+import Users from "./pages/Users";
+import ChangePassword from "./pages/ChangePassword";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -80,6 +82,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <NewProtocol />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute roles={["ADMIN"]}>
+                <Layout>
+                  <Users />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ChangePassword />
                 </Layout>
               </ProtectedRoute>
             }

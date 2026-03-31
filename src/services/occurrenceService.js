@@ -1,7 +1,16 @@
 import { apiFetch } from "./api";
 
-export async function listOccurrences(page = 0, size = 10) {
-  return apiFetch(`/occurrences?page=${page}&size=${size}`);
+export async function listOccurrences(page = 0, size = 10, status = "") {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+  });
+
+  if (status) {
+    params.append("status", status);
+  }
+
+  return apiFetch(`/occurrences?${params.toString()}`);
 }
 
 export async function findOccurrenceById(id) {
