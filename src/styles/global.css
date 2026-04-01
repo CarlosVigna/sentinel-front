@@ -1,63 +1,115 @@
+:root {
+  --primary: #1e293b;
+  --primary-2: #0f172a;
+  --secondary: #334155;
+  --bg: #f4f6f8;
+  --bg-soft: #eef2f7;
+  --card: #ffffff;
+  --card-2: #f8fafc;
+
+  --open: #facc15;
+  --open-soft: #fef3c7;
+
+  --in-progress: #38bdf8;
+  --in-progress-soft: #e0f2fe;
+
+  --resolved: #22c55e;
+  --resolved-soft: #dcfce7;
+
+  --canceled: #f97316;
+  --canceled-soft: #ffedd5;
+
+  --text: #1f2937;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+
+  --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
   margin: 0;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: var(--text);
 }
 
-.login-container {
-  width: 320px;
-  margin: 120px auto;
-  padding: 30px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+a {
+  color: inherit;
 }
 
-.login-container h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 button {
-  width: 100%;
-  padding: 10px;
-  background: #2563eb;
-  color: white;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-button:hover {
-  background: #1e40af;
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: white;
+  color: var(--text);
+  outline: none;
+  transition: 0.2s ease;
 }
 
-.page-container {
-  padding: 30px;
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15);
+}
+
+textarea {
+  resize: vertical;
 }
 
 table {
   width: 100%;
-  background: white;
   border-collapse: collapse;
-  border-radius: 6px;
-  overflow: hidden;
 }
 
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-th {
-  background: #f1f3f5;
+th,
+td {
   text-align: left;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }

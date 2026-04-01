@@ -7,6 +7,7 @@ import Occurrences from "./pages/Occurrences";
 import NewOccurrence from "./pages/NewOccurrence";
 import OccurrenceDetails from "./pages/OccurrenceDetails";
 import Categories from "./pages/Categories";
+import Protocols from "./pages/Protocols";
 import NewProtocol from "./pages/NewProtocol";
 import Users from "./pages/Users";
 import ChangePassword from "./pages/ChangePassword";
@@ -78,6 +79,28 @@ function App() {
 
           <Route
             path="/protocols"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Protocols />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/protocols/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <NewProtocol />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/protocols/:id"
             element={
               <ProtectedRoute>
                 <Layout>

@@ -11,10 +11,9 @@ import { listCategories } from "../services/categoryService";
 import { listProtocolsByCategory } from "../services/protocolService";
 
 const STATUS_TABS = [
-  { key: "OPEN", label: "Abertas" },
-  { key: "IN_PROGRESS", label: "Em andamento" },
-  { key: "RESOLVED", label: "Resolvidas" },
-  { key: "CANCELED", label: "Canceladas" },
+  { key: "OPEN", label: "Abertas", bg: "#fef3c7", color: "#92400e", border: "#fde68a" },
+  { key: "RESOLVED", label: "Resolvidas", bg: "#dcfce7", color: "#166534", border: "#86efac" },
+  { key: "CANCELED", label: "Canceladas", bg: "#ffedd5", color: "#c2410c", border: "#fdba74" },
 ];
 
 export default function Occurrences() {
@@ -110,9 +109,7 @@ export default function Occurrences() {
       await resolveOccurrence(id);
       setSuccess("Ocorrência resolvida com sucesso.");
       await loadOccurrences(page, activeStatus);
-      if (selectedDetails?.id === id) {
-        setSelectedDetails(null);
-      }
+      if (selectedDetails?.id === id) setSelectedDetails(null);
     } catch (err) {
       setError(err.message || "Erro ao resolver ocorrência.");
     } finally {
@@ -131,9 +128,7 @@ export default function Occurrences() {
       await cancelOccurrence(id);
       setSuccess("Ocorrência cancelada com sucesso.");
       await loadOccurrences(page, activeStatus);
-      if (selectedDetails?.id === id) {
-        setSelectedDetails(null);
-      }
+      if (selectedDetails?.id === id) setSelectedDetails(null);
     } catch (err) {
       setError(err.message || "Erro ao cancelar ocorrência.");
     } finally {
@@ -152,9 +147,7 @@ export default function Occurrences() {
       await reopenOccurrence(id);
       setSuccess("Ocorrência reaberta com sucesso.");
       await loadOccurrences(page, activeStatus);
-      if (selectedDetails?.id === id) {
-        setSelectedDetails(null);
-      }
+      if (selectedDetails?.id === id) setSelectedDetails(null);
     } catch (err) {
       setError(err.message || "Erro ao reabrir ocorrência.");
     } finally {
@@ -225,20 +218,6 @@ export default function Occurrences() {
       setSuccess("Ocorrência atualizada com sucesso.");
       closeEditModal();
       await loadOccurrences(page, activeStatus);
-
-      const updated = occurrences.find((o) => o.id === selectedOccurrence.id);
-      if (updated) {
-        setSelectedDetails({
-          ...updated,
-          categoryId: Number(editForm.categoryId),
-          protocolId: Number(editForm.protocolId),
-          plate: editForm.plate,
-          description: editForm.description,
-          textoResponsaveis: editForm.textoResponsaveis,
-          textoMotorista: editForm.textoMotorista,
-          textoInterno: editForm.textoInterno,
-        });
-      }
     } catch (err) {
       setError(err.message || "Erro ao atualizar ocorrência.");
     } finally {
@@ -257,36 +236,34 @@ export default function Occurrences() {
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text || "");
-    } catch {
-      // silencioso de propósito
-    }
+    } catch {}
   }
 
   function getStatusStyle(status) {
     switch (status) {
       case "OPEN":
         return {
-          background: "#fef2f2",
-          color: "#b91c1c",
-          border: "1px solid #fecaca",
+          background: "#fef3c7",
+          color: "#92400e",
+          border: "1px solid #fde68a",
         };
       case "IN_PROGRESS":
         return {
-          background: "#fffbeb",
-          color: "#b45309",
-          border: "1px solid #fde68a",
+          background: "#e0f2fe",
+          color: "#0369a1",
+          border: "1px solid #bae6fd",
         };
       case "RESOLVED":
         return {
-          background: "#ecfdf5",
-          color: "#047857",
-          border: "1px solid #a7f3d0",
+          background: "#dcfce7",
+          color: "#166534",
+          border: "1px solid #86efac",
         };
       case "CANCELED":
         return {
-          background: "#f3f4f6",
-          color: "#374151",
-          border: "1px solid #d1d5db",
+          background: "#ffedd5",
+          color: "#c2410c",
+          border: "1px solid #fdba74",
         };
       default:
         return {
@@ -342,23 +319,30 @@ export default function Occurrences() {
       </div>
 
       <div style={tabsContainerStyle}>
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => {
-              setSuccess("");
-              setError("");
-              navigate(`/occurrences?status=${tab.key}`);
-            }}
-            style={{
-              ...tabButtonStyle,
-              ...(activeStatus === tab.key ? activeTabButtonStyle : {}),
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {STATUS_TABS.map((tab) => {
+          const active = activeStatus === tab.key;
+
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => {
+                setSuccess("");
+                setError("");
+                navigate(`/occurrences?status=${tab.key}`);
+              }}
+              style={{
+                ...tabButtonStyle,
+                background: active ? tab.bg : "#ffffff",
+                color: active ? tab.color : "#334155",
+                border: `1px solid ${active ? tab.border : "#cbd5e1"}`,
+                boxShadow: active ? "0 8px 20px rgba(15,23,42,0.06)" : "none",
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {error && <div style={errorStyle}>{error}</div>}
@@ -384,20 +368,25 @@ export default function Occurrences() {
               </thead>
 
               <tbody>
-                {occurrences.map((occurrence) => (
+                {occurrences.map((occurrence, index) => (
                   <tr
                     key={occurrence.id}
                     style={{
                       ...trStyle,
-                      ...(String(occurrence.id) === String(highlightId)
-                        ? highlightedRowStyle
-                        : {}),
+                      background:
+                        String(occurrence.id) === String(highlightId)
+                          ? "#dbeafe"
+                          : index % 2 === 0
+                          ? "#ffffff"
+                          : "#f8fafc",
                     }}
                   >
                     <td style={tdStyle}>
                       <div style={codeCellStyle}>
                         <span style={mainCellTextStyle}>#{occurrence.id}</span>
-                        <span style={codeDateStyle}>{formatDateTime(occurrence.createdAt)}</span>
+                        <span style={codeDateStyle}>
+                          {formatDateTime(occurrence.createdAt)}
+                        </span>
                       </div>
                     </td>
 
@@ -426,19 +415,18 @@ export default function Occurrences() {
                           type="button"
                           onClick={() => openDetailsModal(occurrence)}
                           style={ghostButtonStyle}
-                          title="Ver detalhes"
                         >
                           Ver
                         </button>
 
-                        {(occurrence.status === "OPEN" || occurrence.status === "IN_PROGRESS") && (
+                        {(occurrence.status === "OPEN" ||
+                          occurrence.status === "IN_PROGRESS") && (
                           <>
                             <button
                               type="button"
                               onClick={() => handleResolve(occurrence.id)}
                               style={primaryButtonStyle}
                               disabled={actionLoadingId === occurrence.id}
-                              title="Resolver ocorrência"
                             >
                               {actionLoadingId === occurrence.id ? "..." : "Resolver"}
                             </button>
@@ -448,7 +436,6 @@ export default function Occurrences() {
                               onClick={() => handleCancel(occurrence.id)}
                               style={dangerButtonStyle}
                               disabled={actionLoadingId === occurrence.id}
-                              title="Cancelar ocorrência"
                             >
                               {actionLoadingId === occurrence.id ? "..." : "Cancelar"}
                             </button>
@@ -457,16 +444,15 @@ export default function Occurrences() {
 
                         {(occurrence.status === "RESOLVED" ||
                           occurrence.status === "CANCELED") && (
-                            <button
-                              type="button"
-                              onClick={() => handleReopen(occurrence.id)}
-                              style={warningButtonStyle}
-                              disabled={actionLoadingId === occurrence.id}
-                              title="Reabrir ocorrência"
-                            >
-                              {actionLoadingId === occurrence.id ? "..." : "Reabrir"}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleReopen(occurrence.id)}
+                            style={warningButtonStyle}
+                            disabled={actionLoadingId === occurrence.id}
+                          >
+                            {actionLoadingId === occurrence.id ? "..." : "Reabrir"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -536,7 +522,8 @@ export default function Occurrences() {
               </div>
 
               <div style={detailsHeaderActionsStyle}>
-                {(selectedDetails.status === "OPEN" || selectedDetails.status === "IN_PROGRESS") && (
+                {(selectedDetails.status === "OPEN" ||
+                  selectedDetails.status === "IN_PROGRESS") && (
                   <button
                     type="button"
                     onClick={() => openEditModal(selectedDetails)}
@@ -587,76 +574,23 @@ export default function Occurrences() {
               </div>
             )}
 
-            <div style={detailsSectionStyle}>
-              <div style={sectionHeaderStyle}>
-                <h4 style={sectionTitleStyle}>Texto responsáveis</h4>
-                <button
-                  type="button"
-                  style={copyButtonStyle}
-                  onClick={() => copyText(selectedDetails.textoResponsaveis)}
-                >
-                  Copiar
-                </button>
-              </div>
-              <div style={detailsTextBoxStyle}>{selectedDetails.textoResponsaveis || "-"}</div>
-            </div>
+            <TextBoxSection
+              title="Texto responsáveis"
+              text={selectedDetails.textoResponsaveis}
+              onCopy={() => copyText(selectedDetails.textoResponsaveis)}
+            />
 
-            <div style={detailsSectionStyle}>
-              <div style={sectionHeaderStyle}>
-                <h4 style={sectionTitleStyle}>Texto motorista</h4>
-                <button
-                  type="button"
-                  style={copyButtonStyle}
-                  onClick={() => copyText(selectedDetails.textoMotorista)}
-                >
-                  Copiar
-                </button>
-              </div>
-              <div style={detailsTextBoxStyle}>{selectedDetails.textoMotorista || "-"}</div>
-            </div>
+            <TextBoxSection
+              title="Texto motorista"
+              text={selectedDetails.textoMotorista}
+              onCopy={() => copyText(selectedDetails.textoMotorista)}
+            />
 
-            <div style={detailsSectionStyle}>
-              <div style={sectionHeaderStyle}>
-                <h4 style={sectionTitleStyle}>Texto interno</h4>
-                <button
-                  type="button"
-                  style={copyButtonStyle}
-                  onClick={() => copyText(selectedDetails.textoInterno)}
-                >
-                  Copiar
-                </button>
-              </div>
-              <div style={detailsTextBoxStyle}>{selectedDetails.textoInterno || "-"}</div>
-            </div>
-
-            <div style={detailsSectionStyle}>
-              <h4 style={sectionTitleStyle}>Auditoria</h4>
-              <div style={auditGridStyle}>
-                <div style={auditCardStyle}>
-                  <span style={auditLabelStyle}>Criado por</span>
-                  <strong>{selectedDetails.createdByName || "-"}</strong>
-                  <small style={auditDateStyle}>{formatDateTime(selectedDetails.createdAt)}</small>
-                </div>
-
-                <div style={auditCardStyle}>
-                  <span style={auditLabelStyle}>Resolvido por</span>
-                  <strong>{selectedDetails.resolvedByName || "-"}</strong>
-                  <small style={auditDateStyle}>{formatDateTime(selectedDetails.resolvedAt)}</small>
-                </div>
-
-                <div style={auditCardStyle}>
-                  <span style={auditLabelStyle}>Cancelado por</span>
-                  <strong>{selectedDetails.canceledByName || "-"}</strong>
-                  <small style={auditDateStyle}>{formatDateTime(selectedDetails.canceledAt)}</small>
-                </div>
-
-                <div style={auditCardStyle}>
-                  <span style={auditLabelStyle}>Reaberto por</span>
-                  <strong>{selectedDetails.reopenedByName || "-"}</strong>
-                  <small style={auditDateStyle}>{formatDateTime(selectedDetails.reopenedAt)}</small>
-                </div>
-              </div>
-            </div>
+            <TextBoxSection
+              title="Texto interno"
+              text={selectedDetails.textoInterno}
+              onCopy={() => copyText(selectedDetails.textoInterno)}
+            />
           </div>
         </div>
       )}
@@ -665,9 +599,7 @@ export default function Occurrences() {
         <div style={modalOverlayStyle}>
           <div style={editModalContentStyle}>
             <div style={modalHeaderStyle}>
-              <h3 style={{ margin: 0 }}>
-                Editar ocorrência #{selectedOccurrence.id}
-              </h3>
+              <h3 style={{ margin: 0 }}>Editar ocorrência #{selectedOccurrence.id}</h3>
 
               <button
                 type="button"
@@ -825,6 +757,20 @@ export default function Occurrences() {
   );
 }
 
+function TextBoxSection({ title, text, onCopy }) {
+  return (
+    <div style={detailsSectionStyle}>
+      <div style={sectionHeaderStyle}>
+        <h4 style={sectionTitleStyle}>{title}</h4>
+        <button type="button" style={copyButtonStyle} onClick={onCopy}>
+          Copiar
+        </button>
+      </div>
+      <div style={detailsTextBoxStyle}>{text || "-"}</div>
+    </div>
+  );
+}
+
 const pageStyle = {
   padding: "24px",
 };
@@ -841,6 +787,7 @@ const titleStyle = {
   margin: 0,
   fontSize: "30px",
   color: "#0f172a",
+  fontWeight: "800",
 };
 
 const subtitleStyle = {
@@ -856,20 +803,11 @@ const tabsContainerStyle = {
 };
 
 const tabButtonStyle = {
-  background: "#f8fafc",
-  color: "#334155",
-  border: "1px solid #cbd5e1",
   padding: "10px 14px",
   borderRadius: "999px",
   cursor: "pointer",
   fontWeight: "700",
   transition: "all 0.2s ease",
-};
-
-const activeTabButtonStyle = {
-  background: "#0f172a",
-  color: "white",
-  border: "1px solid #0f172a",
 };
 
 const errorStyle = {
@@ -919,22 +857,16 @@ const tableStyle = {
 const thStyle = {
   textAlign: "left",
   padding: "16px",
-  background: "#f8fafc",
-  borderBottom: "1px solid #e2e8f0",
-  color: "#475569",
+  background: "#cbd5e1",
+  borderBottom: "1px solid #94a3b8",
+  color: "#1e293b",
   fontSize: "13px",
-  fontWeight: "700",
+  fontWeight: "800",
   letterSpacing: "0.02em",
-  position: "sticky",
-  top: 0,
 };
 
 const trStyle = {
   transition: "background 0.2s ease",
-};
-
-const highlightedRowStyle = {
-  background: "#eff6ff",
 };
 
 const tdStyle = {
@@ -981,7 +913,6 @@ const rowActionsStyle = {
 const primaryButtonStyle = {
   background: "#2563eb",
   color: "white",
-  border: "none",
   padding: "9px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -991,7 +922,6 @@ const primaryButtonStyle = {
 const dangerButtonStyle = {
   background: "#dc2626",
   color: "white",
-  border: "none",
   padding: "9px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -1001,7 +931,6 @@ const dangerButtonStyle = {
 const warningButtonStyle = {
   background: "#f59e0b",
   color: "white",
-  border: "none",
   padding: "9px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -1011,7 +940,6 @@ const warningButtonStyle = {
 const secondaryButtonStyle = {
   background: "#e2e8f0",
   color: "#0f172a",
-  border: "none",
   padding: "9px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -1031,7 +959,6 @@ const ghostButtonStyle = {
 const copyButtonStyle = {
   background: "#0f172a",
   color: "white",
-  border: "none",
   padding: "8px 12px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -1126,7 +1053,6 @@ const detailsSubheaderStyle = {
 
 const modalCloseButtonStyle = {
   background: "transparent",
-  border: "none",
   fontSize: "28px",
   cursor: "pointer",
   lineHeight: 1,
@@ -1184,33 +1110,6 @@ const detailsTextBoxStyle = {
   wordBreak: "break-word",
   color: "#0f172a",
   lineHeight: 1.6,
-};
-
-const auditGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-  gap: "12px",
-};
-
-const auditCardStyle = {
-  background: "#f8fafc",
-  border: "1px solid #e2e8f0",
-  borderRadius: "14px",
-  padding: "14px",
-  display: "grid",
-  gap: "6px",
-};
-
-const auditLabelStyle = {
-  fontSize: "12px",
-  fontWeight: "700",
-  color: "#64748b",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-};
-
-const auditDateStyle = {
-  color: "#64748b",
 };
 
 const formGridStyle = {

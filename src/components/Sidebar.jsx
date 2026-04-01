@@ -7,61 +7,74 @@ export default function Sidebar() {
   const { user, logout } = useContext(AuthContext);
 
   function isActive(path) {
-    return location.pathname === path;
+  if (path === "/") {
+    return location.pathname === "/";
   }
+
+  if (path === "/occurrences") {
+    return location.pathname === "/occurrences";
+  }
+
+  if (path === "/protocols") {
+    return location.pathname === "/protocols";
+  }
+
+  return location.pathname.startsWith(path);
+}
 
   return (
     <aside style={sidebarStyle}>
       <div>
-        <div style={brandBlockStyle}>
-          <div style={brandBadgeStyle}>S</div>
+        <div style={logoAreaStyle}>
+          <div style={logoIconStyle}>S</div>
+
           <div>
-            <h2 style={brandTitleStyle}>Sentinel</h2>
-            <p style={brandSubtitleStyle}>Gestão operacional</p>
+            <h1 style={logoTitleStyle}>Sentinel</h1>
+            <p style={logoSubtitleStyle}>Painel operacional</p>
           </div>
         </div>
 
-        <div style={userCardStyle}>
-          <div style={userAvatarStyle}>
+        <div style={profileCardStyle}>
+          <div style={avatarStyle}>
             {(user?.nome || "U").charAt(0).toUpperCase()}
           </div>
 
           <div>
-            <p style={userNameStyle}>{user?.nome || "Usuário"}</p>
-            <p style={userRoleStyle}>{user?.role || ""}</p>
+            <div style={profileNameStyle}>{user?.nome || "Usuário"}</div>
+            <div style={profileRoleStyle}>{user?.role || "Operador"}</div>
           </div>
         </div>
 
-        <nav style={navStyle}>
-          <NavItem to="/" active={isActive("/")}>
+        <nav style={menuStyle}>
+          <MenuItem to="/" active={isActive("/")}>
             Dashboard
-          </NavItem>
+          </MenuItem>
 
-          <NavItem to="/occurrences" active={isActive("/occurrences")}>
+          <MenuItem to="/occurrences" active={isActive("/occurrences")}>
             Ocorrências
-          </NavItem>
+          </MenuItem>
 
-          <NavItem to="/occurrences/new" active={isActive("/occurrences/new")}>
+          <MenuItem to="/occurrences/new" active={isActive("/occurrences/new")}>
             Nova Ocorrência
-          </NavItem>
+          </MenuItem>
 
-          <NavItem to="/categories" active={isActive("/categories")}>
+          <MenuItem to="/categories" active={isActive("/categories")}>
             Categorias
-          </NavItem>
+          </MenuItem>
 
-          <NavItem to="/protocols" active={isActive("/protocols")}>
+          <MenuItem to="/protocols" active={isActive("/protocols")}>
             Protocolos
-          </NavItem>
+          </MenuItem>
 
           {user?.role === "ADMIN" && (
-            <NavItem to="/users" active={isActive("/users")}>
+            <MenuItem to="/users" active={isActive("/users")}>
               Usuários
-            </NavItem>
+            </MenuItem>
           )}
 
-          <NavItem to="/change-password" active={isActive("/change-password")}>
+          <MenuItem to="/change-password" active={isActive("/change-password")}>
             Alterar Senha
-          </NavItem>
+          </MenuItem>
         </nav>
       </div>
 
@@ -72,13 +85,13 @@ export default function Sidebar() {
   );
 }
 
-function NavItem({ to, active, children }) {
+function MenuItem({ to, active, children }) {
   return (
     <Link
       to={to}
       style={{
-        ...navItemStyle,
-        ...(active ? navItemActiveStyle : {}),
+        ...menuItemStyle,
+        ...(active ? menuItemActiveStyle : {}),
       }}
     >
       {children}
@@ -87,120 +100,116 @@ function NavItem({ to, active, children }) {
 }
 
 const sidebarStyle = {
-  width: "270px",
+  width: "290px",
   minHeight: "100vh",
-  background: "linear-gradient(180deg, #0f172a 0%, #111827 100%)",
-  color: "white",
-  padding: "24px 18px",
-  boxSizing: "border-box",
+  padding: "22px 18px",
+  background: "#626b80",
+  color: "#ffffff",
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
   borderRight: "1px solid rgba(255,255,255,0.06)",
-  boxShadow: "8px 0 30px rgba(15, 23, 42, 0.08)",
+  boxShadow: "10px 0 30px rgba(15, 23, 42, 0.10)",
 };
 
-const brandBlockStyle = {
+const logoAreaStyle = {
   display: "flex",
   alignItems: "center",
   gap: "14px",
-  marginBottom: "28px",
+  marginBottom: "30px",
 };
 
-const brandBadgeStyle = {
-  width: "44px",
-  height: "44px",
-  borderRadius: "14px",
-  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+const logoIconStyle = {
+  width: "50px",
+  height: "50px",
+  borderRadius: "16px",
+  background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+  color: "#0f172a",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "800",
-  fontSize: "20px",
-  boxShadow: "0 10px 24px rgba(37, 99, 235, 0.35)",
-};
-
-const brandTitleStyle = {
-  margin: 0,
   fontSize: "22px",
-  fontWeight: "800",
 };
 
-const brandSubtitleStyle = {
+const logoTitleStyle = {
+  margin: 0,
+  fontSize: "24px",
+  fontWeight: "800",
+  letterSpacing: "-0.03em",
+};
+
+const logoSubtitleStyle = {
   margin: "4px 0 0",
   fontSize: "13px",
   color: "rgba(255,255,255,0.65)",
 };
 
-const userCardStyle = {
+const profileCardStyle = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  padding: "14px",
-  borderRadius: "16px",
   background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.06)",
-  marginBottom: "26px",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "18px",
+  padding: "14px",
+  marginBottom: "28px",
 };
 
-const userAvatarStyle = {
-  width: "42px",
-  height: "42px",
+const avatarStyle = {
+  width: "44px",
+  height: "44px",
   borderRadius: "999px",
-  background: "rgba(37, 99, 235, 0.2)",
-  color: "#bfdbfe",
+  background: "rgba(250,204,21,0.18)",
+  color: "#fde68a",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "800",
+  fontSize: "16px",
 };
 
-const userNameStyle = {
-  margin: 0,
+const profileNameStyle = {
   fontSize: "14px",
   fontWeight: "700",
 };
 
-const userRoleStyle = {
-  margin: "4px 0 0",
+const profileRoleStyle = {
+  marginTop: "4px",
   fontSize: "12px",
   color: "rgba(255,255,255,0.65)",
   fontWeight: "600",
 };
 
-const navStyle = {
+const menuStyle = {
   display: "flex",
   flexDirection: "column",
   gap: "10px",
 };
 
-const navItemStyle = {
-  color: "rgba(255,255,255,0.88)",
+const menuItemStyle = {
   textDecoration: "none",
-  fontSize: "15px",
+  color: "rgba(255,255,255,0.84)",
+  padding: "13px 14px",
+  borderRadius: "14px",
   fontWeight: "600",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  transition: "all 0.2s ease",
+  fontSize: "15px",
   border: "1px solid transparent",
+  transition: "0.2s ease",
 };
 
-const navItemActiveStyle = {
-  background: "rgba(37, 99, 235, 0.18)",
-  color: "#ffffff",
-  border: "1px solid rgba(96, 165, 250, 0.28)",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.03)",
+const menuItemActiveStyle = {
+  background: "#8f9399",
+  color: "#e0d8d8",
+  border: "1px solid rgba(255,255,255,0.08)",
 };
 
 const logoutButtonStyle = {
-  marginTop: "28px",
   background: "#dc2626",
-  color: "white",
-  border: "none",
+  color: "#ffffff",
   padding: "12px 14px",
-  borderRadius: "12px",
+  borderRadius: "14px",
   cursor: "pointer",
   fontWeight: "700",
   fontSize: "14px",
-  boxShadow: "0 10px 20px rgba(220, 38, 38, 0.2)",
 };

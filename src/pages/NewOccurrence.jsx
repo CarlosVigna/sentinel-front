@@ -186,6 +186,12 @@ export default function NewOccurrence() {
     }
   }
 
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text || "");
+    } catch {}
+  }
+
   if (loading) {
     return <div style={{ padding: "24px" }}>Carregando...</div>;
   }
@@ -326,28 +332,39 @@ export default function NewOccurrence() {
             </p>
           </div>
 
-          <div style={previewSectionStyle}>
-            <div style={previewHeaderStyle}>
-              <h3 style={previewTitleStyle}>Texto para responsáveis</h3>
-            </div>
-            <pre style={preStyle}>{generatedTexts.textoResponsaveis}</pre>
-          </div>
+          <PreviewBox
+            title="Texto para responsáveis"
+            text={generatedTexts.textoResponsaveis}
+            onCopy={() => copyText(generatedTexts.textoResponsaveis)}
+          />
 
-          <div style={previewSectionStyle}>
-            <div style={previewHeaderStyle}>
-              <h3 style={previewTitleStyle}>Texto para motorista</h3>
-            </div>
-            <pre style={preStyle}>{generatedTexts.textoMotorista}</pre>
-          </div>
+          <PreviewBox
+            title="Texto para motorista"
+            text={generatedTexts.textoMotorista}
+            onCopy={() => copyText(generatedTexts.textoMotorista)}
+          />
 
-          <div style={previewSectionStyle}>
-            <div style={previewHeaderStyle}>
-              <h3 style={previewTitleStyle}>Texto interno</h3>
-            </div>
-            <pre style={preStyle}>{generatedTexts.textoInterno}</pre>
-          </div>
+          <PreviewBox
+            title="Texto interno"
+            text={generatedTexts.textoInterno}
+            onCopy={() => copyText(generatedTexts.textoInterno)}
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+function PreviewBox({ title, text, onCopy }) {
+  return (
+    <div style={previewSectionStyle}>
+      <div style={previewHeaderStyle}>
+        <h3 style={previewTitleStyle}>{title}</h3>
+        <button type="button" onClick={onCopy} style={copyButtonStyle}>
+          Copiar
+        </button>
+      </div>
+      <pre style={preStyle}>{text}</pre>
     </div>
   );
 }
@@ -489,6 +506,7 @@ const previewHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
+  gap: "12px",
 };
 
 const previewTitleStyle = {
@@ -509,16 +527,26 @@ const preStyle = {
   lineHeight: 1.6,
   margin: 0,
   fontFamily: "inherit",
+  minHeight: "92px",
 };
 
 const primaryButtonStyle = {
   background: "#2563eb",
   color: "white",
-  border: "none",
   padding: "12px 14px",
   borderRadius: "12px",
   cursor: "pointer",
   fontWeight: "800",
+};
+
+const copyButtonStyle = {
+  background: "#0f172a",
+  color: "white",
+  padding: "8px 12px",
+  borderRadius: "10px",
+  cursor: "pointer",
+  fontWeight: "700",
+  fontSize: "12px",
 };
 
 const errorStyle = {

@@ -5,9 +5,9 @@ export default function Layout({ children }) {
     <div style={layoutStyle}>
       <Sidebar />
 
-      <main style={mainStyle}>
-        <div style={contentWrapperStyle}>{children}</div>
-      </main>
+      <div style={contentWrapperStyle}>
+        <main style={mainStyle}>{children}</main>
+      </div>
     </div>
   );
 }
@@ -15,15 +15,14 @@ export default function Layout({ children }) {
 const layoutStyle = {
   display: "flex",
   minHeight: "100vh",
-  background: "#f1f5f9",
-};
-
-const mainStyle = {
-  flex: 1,
-  minHeight: "100vh",
   background: "linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)",
 };
 
 const contentWrapperStyle = {
+  flex: 1,
+  minWidth: 0,
+};
+
+const mainStyle = {
   padding: "28px",
 };

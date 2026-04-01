@@ -8,7 +8,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
-    inProgress: 0,
     resolved: 0,
     canceled: 0,
   });
@@ -22,59 +21,66 @@ export default function Dashboard() {
   }, []);
 
   async function loadDashboard() {
-    try {
-      setLoading(true);
-      setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-      const statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CANCELED"];
+    const statuses = ["OPEN", "RESOLVED", "CANCELED"];
 
-      const results = await Promise.all(
-        statuses.map((status) => listOccurrences(0, 100, status))
-      );
+    const results = await Promise.all(
+      statuses.map(async (status) => {
+        try {
+          const data = await listOccurrences(0, 100, status);
+          return data ?? { content: [], totalElements: 0 };
+        } catch {
+          return { content: [], totalElements: 0 };
+        }
+      })
+    );
 
-      const openOccurrences = results[0].content || [];
-      const inProgressOccurrences = results[1].content || [];
-      const resolvedOccurrences = results[2].content || [];
-      const canceledOccurrences = results[3].content || [];
+    const openResult = results[0] || { content: [], totalElements: 0 };
+    const resolvedResult = results[1] || { content: [], totalElements: 0 };
+    const canceledResult = results[2] || { content: [], totalElements: 0 };
 
-      const allOccurrences = [
-        ...openOccurrences,
-        ...inProgressOccurrences,
-        ...resolvedOccurrences,
-        ...canceledOccurrences,
-      ];
+    const openOccurrences = openResult.content || [];
+    const resolvedOccurrences = resolvedResult.content || [];
+    const canceledOccurrences = canceledResult.content || [];
 
-      setStats({
-        total:
-          (results[0].totalElements || 0) +
-          (results[1].totalElements || 0) +
-          (results[2].totalElements || 0) +
-          (results[3].totalElements || 0),
-        open: results[0].totalElements || 0,
-        inProgress: results[1].totalElements || 0,
-        resolved: results[2].totalElements || 0,
-        canceled: results[3].totalElements || 0,
-      });
+    const allOccurrences = [
+      ...openOccurrences,
+      ...resolvedOccurrences,
+      ...canceledOccurrences,
+    ];
 
-      const uniqueOccurrences = Array.from(
-        new Map(allOccurrences.map((occ) => [occ.id, occ])).values()
-      );
+    setStats({
+      total:
+        (openResult.totalElements || 0) +
+        (resolvedResult.totalElements || 0) +
+        (canceledResult.totalElements || 0),
+      open: openResult.totalElements || 0,
+      resolved: resolvedResult.totalElements || 0,
+      canceled: canceledResult.totalElements || 0,
+    });
 
-      const recent = uniqueOccurrences
-        .sort((a, b) => {
-          const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-          const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-          return dateB - dateA;
-        })
-        .slice(0, 5);
+    const uniqueOccurrences = Array.from(
+      new Map(allOccurrences.map((occ) => [occ.id, occ])).values()
+    );
 
-      setRecentOccurrences(recent);
-    } catch (err) {
-      setError(err.message || "Erro ao carregar dashboard.");
-    } finally {
-      setLoading(false);
-    }
+    const recent = uniqueOccurrences
+      .sort((a, b) => {
+        const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 5);
+
+    setRecentOccurrences(recent);
+  } catch (err) {
+    setError(err.message || "Erro ao carregar dashboard.");
+  } finally {
+    setLoading(false);
   }
+}
 
   function formatDateTime(value) {
     if (!value) return "-";
@@ -90,14 +96,52 @@ export default function Dashboard() {
     switch (status) {
       case "OPEN":
         return "Aberta";
-      case "IN_PROGRESS":
-        return "Em andamento";
       case "RESOLVED":
         return "Resolvida";
       case "CANCELED":
         return "Cancelada";
       default:
         return status;
+    }
+  }
+
+  function getStatusBadgeStyle(status) {
+    switch (status) {
+      case "OPEN":
+        return {
+          ...statusBadgeBaseStyle,
+          background: "#fef3c7",
+          color: "#92400e",
+          border: "1px solid #fde68a",
+        };
+      case "IN_PROGRESS":
+        return {
+          ...statusBadgeBaseStyle,
+          background: "#e0f2fe",
+          color: "#0369a1",
+          border: "1px solid #bae6fd",
+        };
+      case "RESOLVED":
+        return {
+          ...statusBadgeBaseStyle,
+          background: "#dcfce7",
+          color: "#166534",
+          border: "1px solid #86efac",
+        };
+      case "CANCELED":
+        return {
+          ...statusBadgeBaseStyle,
+          background: "#ffedd5",
+          color: "#c2410c",
+          border: "1px solid #fdba74",
+        };
+      default:
+        return {
+          ...statusBadgeBaseStyle,
+          background: "#e2e8f0",
+          color: "#0f172a",
+          border: "1px solid #cbd5e1",
+        };
     }
   }
 
@@ -131,30 +175,31 @@ export default function Dashboard() {
           title="Total"
           value={stats.total}
           subtitle="Todas as ocorrências"
+          color="#334155"
           onClick={() => navigate("/occurrences")}
         />
+
         <StatCard
           title="Abertas"
           value={stats.open}
           subtitle="Precisam de atenção"
+          color="#facc15"
           onClick={() => goToStatus("OPEN")}
         />
-        <StatCard
-          title="Em andamento"
-          value={stats.inProgress}
-          subtitle="Em tratativa"
-          onClick={() => goToStatus("IN_PROGRESS")}
-        />
+
         <StatCard
           title="Resolvidas"
           value={stats.resolved}
-          subtitle="Finalizadas com sucesso"
+          subtitle="Finalizadas"
+          color="#22c55e"
           onClick={() => goToStatus("RESOLVED")}
         />
+
         <StatCard
           title="Canceladas"
           value={stats.canceled}
-          subtitle="Encerradas por cancelamento"
+          subtitle="Encerradas"
+          color="#f97316"
           onClick={() => goToStatus("CANCELED")}
         />
       </div>
@@ -187,11 +232,14 @@ export default function Dashboard() {
               </thead>
 
               <tbody>
-                {recentOccurrences.map((occ) => (
+                {recentOccurrences.map((occ, index) => (
                   <tr
                     key={occ.id}
                     onClick={() => openOccurrence(occ)}
-                    style={clickableRowStyle}
+                    style={{
+                      ...clickableRowStyle,
+                      background: index % 2 === 0 ? "#ffffff" : "#f8fafc",
+                    }}
                     title="Abrir ocorrência"
                   >
                     <td style={tdStyle}>#{occ.id}</td>
@@ -220,9 +268,9 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, subtitle, onClick }) {
+function StatCard({ title, value, subtitle, color, onClick }) {
   return (
-    <button type="button" onClick={onClick} style={statCardStyle}>
+    <button type="button" onClick={onClick} style={{ ...statCardStyle, borderTop: `5px solid ${color}` }}>
       <div style={statCardTopStyle}>
         <span style={statTitleStyle}>{title}</span>
       </div>
@@ -233,45 +281,16 @@ function StatCard({ title, value, subtitle, onClick }) {
   );
 }
 
-function getStatusBadgeStyle(status) {
-  switch (status) {
-    case "OPEN":
-      return {
-        ...statusBadgeBaseStyle,
-        background: "#fef2f2",
-        color: "#b91c1c",
-        border: "1px solid #fecaca",
-      };
-    case "IN_PROGRESS":
-      return {
-        ...statusBadgeBaseStyle,
-        background: "#fffbeb",
-        color: "#b45309",
-        border: "1px solid #fde68a",
-      };
-    case "RESOLVED":
-      return {
-        ...statusBadgeBaseStyle,
-        background: "#ecfdf5",
-        color: "#047857",
-        border: "1px solid #a7f3d0",
-      };
-    case "CANCELED":
-      return {
-        ...statusBadgeBaseStyle,
-        background: "#f3f4f6",
-        color: "#374151",
-        border: "1px solid #d1d5db",
-      };
-    default:
-      return {
-        ...statusBadgeBaseStyle,
-        background: "#e2e8f0",
-        color: "#0f172a",
-        border: "1px solid #cbd5e1",
-      };
-  }
-}
+const statusBadgeBaseStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "6px 10px",
+  borderRadius: "999px",
+  fontSize: "12px",
+  fontWeight: "800",
+  whiteSpace: "nowrap",
+};
 
 const dashboardHeaderStyle = {
   display: "flex",
@@ -373,9 +392,9 @@ const tableStyle = {
 const thStyle = {
   textAlign: "left",
   padding: "14px 18px",
-  background: "#f8fafc",
-  borderBottom: "1px solid #e2e8f0",
-  color: "#475569",
+  background: "#e2e8f0",
+  borderBottom: "1px solid #cbd5e1",
+  color: "#334155",
   fontSize: "13px",
   fontWeight: "800",
 };
@@ -389,17 +408,6 @@ const tdStyle = {
 
 const clickableRowStyle = {
   cursor: "pointer",
-};
-
-const statusBadgeBaseStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "6px 10px",
-  borderRadius: "999px",
-  fontSize: "12px",
-  fontWeight: "800",
-  whiteSpace: "nowrap",
 };
 
 const platePillStyle = {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { listCategories } from "../services/categoryService";
 import {
   createProtocol,
-  deleteProtocol,
-  listProtocols,
+  findProtocolById,
   updateProtocol,
 } from "../services/protocolService";
 
@@ -24,10 +24,13 @@ const EMPTY_FORM = {
 };
 
 export default function NewProtocol() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const isEditMode = Boolean(id);
+
   const [categories, setCategories] = useState([]);
-  const [protocols, setProtocols] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -35,33 +38,47 @@ export default function NewProtocol() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [id]);
 
   async function loadData() {
     try {
       setLoading(true);
       setError("");
+      setSuccess("");
 
-      const [categoriesData, protocolsData] = await Promise.all([
-        listCategories(),
-        listProtocols(),
-      ]);
+      const categoriesData = await listCategories();
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
 
-      setCategories(categoriesData);
-      setProtocols(protocolsData);
+      if (isEditMode) {
+        const protocol = await findProtocolById(id);
+
+        setForm({
+          name: protocol.name || "",
+          categoryId: protocol.categoryId ? String(protocol.categoryId) : "",
+          textoResponsaveis: protocol.textoResponsaveis || "",
+          textoMotorista: protocol.textoMotorista || "",
+          textoInterno: protocol.textoInterno || "",
+          fields:
+            protocol.fields && protocol.fields.length > 0
+              ? protocol.fields.map((field) => ({
+                  fieldKey: field.fieldKey || "",
+                  fieldLabel: field.fieldLabel || "",
+                  required: Boolean(field.required),
+                  fieldType: field.fieldType || "TEXT",
+                }))
+              : [{ ...EMPTY_FIELD }],
+        });
+      } else {
+        setForm({
+          ...EMPTY_FORM,
+          fields: [{ ...EMPTY_FIELD }],
+        });
+      }
     } catch (err) {
-      setError(err.message || "Erro ao carregar protocolos.");
+      setError(err.message || "Erro ao carregar protocolo.");
     } finally {
       setLoading(false);
     }
-  }
-
-  function resetForm() {
-    setForm({
-      ...EMPTY_FORM,
-      fields: [{ ...EMPTY_FIELD }],
-    });
-    setEditingId(null);
   }
 
   function handleChange(event) {
@@ -149,16 +166,17 @@ export default function NewProtocol() {
         throw new Error("Preencha os três textos do protocolo.");
       }
 
-      if (editingId) {
-        await updateProtocol(editingId, payload);
+      if (isEditMode) {
+        await updateProtocol(id, payload);
         setSuccess("Protocolo atualizado com sucesso.");
       } else {
         await createProtocol(payload);
         setSuccess("Protocolo criado com sucesso.");
       }
 
-      resetForm();
-      await loadData();
+      setTimeout(() => {
+        navigate("/protocols");
+      }, 700);
     } catch (err) {
       setError(err.message || "Erro ao salvar protocolo.");
     } finally {
@@ -166,54 +184,8 @@ export default function NewProtocol() {
     }
   }
 
-  function handleEdit(protocol) {
-    setEditingId(protocol.id);
-    setError("");
-    setSuccess("");
-
-    setForm({
-      name: protocol.name || "",
-      categoryId: protocol.categoryId ? String(protocol.categoryId) : "",
-      textoResponsaveis: protocol.textoResponsaveis || "",
-      textoMotorista: protocol.textoMotorista || "",
-      textoInterno: protocol.textoInterno || "",
-      fields:
-        protocol.fields && protocol.fields.length > 0
-          ? protocol.fields.map((field) => ({
-              fieldKey: field.fieldKey || "",
-              fieldLabel: field.fieldLabel || "",
-              required: Boolean(field.required),
-              fieldType: field.fieldType || "TEXT",
-            }))
-          : [{ ...EMPTY_FIELD }],
-    });
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function handleDelete(id) {
-    const confirmed = window.confirm("Deseja inativar este protocolo?");
-    if (!confirmed) return;
-
-    try {
-      setError("");
-      setSuccess("");
-
-      await deleteProtocol(id);
-      setSuccess("Protocolo inativado com sucesso.");
-
-      if (editingId === id) {
-        resetForm();
-      }
-
-      await loadData();
-    } catch (err) {
-      setError(err.message || "Erro ao inativar protocolo.");
-    }
-  }
-
   if (loading) {
-    return <div style={{ padding: "24px" }}>Carregando protocolos...</div>;
+    return <div style={{ padding: "24px" }}>Carregando protocolo...</div>;
   }
 
   return (
@@ -221,7 +193,7 @@ export default function NewProtocol() {
       <div style={pageHeaderStyle}>
         <div>
           <h1 style={pageTitleStyle}>
-            {editingId ? "Editar Protocolo" : "Novo Protocolo"}
+            {isEditMode ? "Editar Protocolo" : "Novo Protocolo"}
           </h1>
           <p style={pageSubtitleStyle}>
             Configure templates reutilizáveis para a criação de ocorrências.
@@ -397,74 +369,23 @@ export default function NewProtocol() {
           </div>
 
           <div style={formFooterStyle}>
+            <button
+              type="button"
+              onClick={() => navigate("/protocols")}
+              style={secondaryButtonStyle}
+            >
+              Voltar
+            </button>
+
             <button type="submit" disabled={saving} style={primaryButtonStyle}>
               {saving
                 ? "Salvando..."
-                : editingId
+                : isEditMode
                 ? "Atualizar protocolo"
                 : "Salvar protocolo"}
             </button>
-
-            {editingId && (
-              <button type="button" onClick={resetForm} style={secondaryButtonStyle}>
-                Cancelar edição
-              </button>
-            )}
           </div>
         </form>
-      </div>
-
-      <div style={cardStyle}>
-        <div style={cardHeaderStyle}>
-          <h2 style={cardTitleStyle}>Protocolos cadastrados</h2>
-          <p style={cardSubtitleStyle}>
-            Edite ou inative protocolos já criados.
-          </p>
-        </div>
-
-        {protocols.length === 0 ? (
-          <div style={emptyStateStyle}>Nenhum protocolo cadastrado.</div>
-        ) : (
-          <div style={protocolListStyle}>
-            {protocols.map((protocol) => (
-              <div key={protocol.id} style={protocolCardStyle}>
-                <div style={protocolCardTopStyle}>
-                  <div>
-                    <h3 style={protocolNameStyle}>{protocol.name}</h3>
-                    <p style={protocolMetaStyle}>
-                      Categoria: <strong>{protocol.categoryName}</strong>
-                    </p>
-                  </div>
-
-                  <div style={actionsStyle}>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(protocol)}
-                      style={secondaryButtonStyle}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(protocol.id)}
-                      style={dangerButtonStyle}
-                    >
-                      Inativar
-                    </button>
-                  </div>
-                </div>
-
-                <div style={protocolFieldListStyle}>
-                  <span style={protocolFieldLabelStyle}>Campos:</span>{" "}
-                  {protocol.fields?.length
-                    ? protocol.fields.map((field) => field.fieldLabel).join(", ")
-                    : "Nenhum"}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -599,54 +520,6 @@ const formFooterStyle = {
   flexWrap: "wrap",
 };
 
-const protocolListStyle = {
-  display: "grid",
-  gap: "14px",
-};
-
-const protocolCardStyle = {
-  border: "1px solid #e2e8f0",
-  borderRadius: "16px",
-  padding: "18px",
-  background: "#f8fafc",
-};
-
-const protocolCardTopStyle = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  gap: "12px",
-};
-
-const protocolNameStyle = {
-  margin: 0,
-  color: "#0f172a",
-  fontSize: "18px",
-  fontWeight: "800",
-};
-
-const protocolMetaStyle = {
-  margin: "8px 0 0",
-  color: "#64748b",
-};
-
-const protocolFieldListStyle = {
-  marginTop: "12px",
-  color: "#334155",
-  lineHeight: 1.6,
-};
-
-const protocolFieldLabelStyle = {
-  fontWeight: "800",
-  color: "#0f172a",
-};
-
-const actionsStyle = {
-  display: "flex",
-  gap: "10px",
-  flexWrap: "wrap",
-};
-
 const primaryButtonStyle = {
   background: "#2563eb",
   color: "white",
@@ -660,16 +533,6 @@ const primaryButtonStyle = {
 const secondaryButtonStyle = {
   background: "#e2e8f0",
   color: "#0f172a",
-  border: "none",
-  padding: "10px 14px",
-  borderRadius: "10px",
-  cursor: "pointer",
-  fontWeight: "700",
-};
-
-const dangerButtonStyle = {
-  background: "#dc2626",
-  color: "white",
   border: "none",
   padding: "10px 14px",
   borderRadius: "10px",
@@ -701,8 +564,4 @@ const successStyle = {
   background: "#dcfce7",
   color: "#166534",
   border: "1px solid #86efac",
-};
-
-const emptyStateStyle = {
-  color: "#64748b",
 };
