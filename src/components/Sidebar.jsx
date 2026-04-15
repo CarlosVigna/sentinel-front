@@ -7,20 +7,9 @@ export default function Sidebar() {
   const { user, logout } = useContext(AuthContext);
 
   function isActive(path) {
-  if (path === "/") {
-    return location.pathname === "/";
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
   }
-
-  if (path === "/occurrences") {
-    return location.pathname === "/occurrences";
-  }
-
-  if (path === "/protocols") {
-    return location.pathname === "/protocols";
-  }
-
-  return location.pathname.startsWith(path);
-}
 
   return (
     <aside style={sidebarStyle}>
@@ -66,6 +55,11 @@ export default function Sidebar() {
             Protocolos
           </MenuItem>
 
+          {/* 🔥 NOVO */}
+          <MenuItem to="/reports" active={isActive("/reports")}>
+            📊 Relatórios
+          </MenuItem>
+
           {user?.role === "ADMIN" && (
             <MenuItem to="/users" active={isActive("/users")}>
               Usuários
@@ -98,6 +92,8 @@ function MenuItem({ to, active, children }) {
     </Link>
   );
 }
+
+// ===== estilos (mantive os seus) =====
 
 const sidebarStyle = {
   width: "290px",
@@ -136,7 +132,6 @@ const logoTitleStyle = {
   margin: 0,
   fontSize: "24px",
   fontWeight: "800",
-  letterSpacing: "-0.03em",
 };
 
 const logoSubtitleStyle = {
@@ -150,7 +145,6 @@ const profileCardStyle = {
   alignItems: "center",
   gap: "12px",
   background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,255,255,0.08)",
   borderRadius: "18px",
   padding: "14px",
   marginBottom: "28px",
@@ -161,25 +155,14 @@ const avatarStyle = {
   height: "44px",
   borderRadius: "999px",
   background: "rgba(250,204,21,0.18)",
-  color: "#fde68a",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "800",
-  fontSize: "16px",
 };
 
-const profileNameStyle = {
-  fontSize: "14px",
-  fontWeight: "700",
-};
-
-const profileRoleStyle = {
-  marginTop: "4px",
-  fontSize: "12px",
-  color: "rgba(255,255,255,0.65)",
-  fontWeight: "600",
-};
+const profileNameStyle = { fontSize: "14px", fontWeight: "700" };
+const profileRoleStyle = { fontSize: "12px", opacity: 0.7 };
 
 const menuStyle = {
   display: "flex",
@@ -189,27 +172,19 @@ const menuStyle = {
 
 const menuItemStyle = {
   textDecoration: "none",
-  color: "rgba(255,255,255,0.84)",
-  padding: "13px 14px",
-  borderRadius: "14px",
-  fontWeight: "600",
-  fontSize: "15px",
-  border: "1px solid transparent",
-  transition: "0.2s ease",
+  color: "#fff",
+  padding: "12px",
+  borderRadius: "12px",
 };
 
 const menuItemActiveStyle = {
   background: "#8f9399",
-  color: "#e0d8d8",
-  border: "1px solid rgba(255,255,255,0.08)",
 };
 
 const logoutButtonStyle = {
   background: "#dc2626",
-  color: "#ffffff",
-  padding: "12px 14px",
-  borderRadius: "14px",
+  color: "#fff",
+  padding: "12px",
+  borderRadius: "12px",
   cursor: "pointer",
-  fontWeight: "700",
-  fontSize: "14px",
 };

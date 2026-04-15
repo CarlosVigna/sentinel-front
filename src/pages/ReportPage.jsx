@@ -25,7 +25,7 @@ export default function ReportPage() {
       <h1>📊 Relatório de Ocorrências</h1>
 
       <div style={{ marginBottom: "15px" }}>
-        <button onClick={handleGenerate} disabled={loading}>
+        <button onClick={handleGenerate}>
           {loading ? "Gerando..." : "Gerar Relatório"}
         </button>
 
@@ -38,19 +38,8 @@ export default function ReportPage() {
         </button>
       </div>
 
-      <pre
-        style={{
-          background: "#0d1117",
-          color: "#00ff9c",
-          padding: "20px",
-          borderRadius: "10px",
-          maxHeight: "500px",
-          overflow: "auto",
-          whiteSpace: "pre-wrap",
-          fontSize: "13px",
-        }}
-      >
-        {report || "Clique em 'Gerar Relatório'..."}
+      <pre style={{ background: "#111", color: "#0f0", padding: "20px" }}>
+        {report || "Clique em gerar relatório..."}
       </pre>
     </div>
   );
