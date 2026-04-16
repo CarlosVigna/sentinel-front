@@ -10,7 +10,6 @@ import Categories from "./pages/Categories";
 import Protocols from "./pages/Protocols";
 import NewProtocol from "./pages/NewProtocol";
 import Users from "./pages/Users";
-import ReportPage from "./pages/ReportPage";
 import ChangePassword from "./pages/ChangePassword";
 import Reports from "./pages/Reports";
 
@@ -133,17 +132,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <ReportPage />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
 
+          {/* ✅ RELATÓRIOS CORRETO */}
           <Route
             path="/reports"
             element={

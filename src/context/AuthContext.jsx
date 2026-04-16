@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
-import { login as loginService } from "@/services/authService";
-import { getMe } from "@/services/userService";
+import { login as loginService } from "../services/authService";
+import { getMe } from "../services/userService";
 
 export const AuthContext = createContext();
 
