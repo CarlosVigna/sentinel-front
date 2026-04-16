@@ -12,6 +12,7 @@ import NewProtocol from "./pages/NewProtocol";
 import Users from "./pages/Users";
 import ReportPage from "./pages/ReportPage";
 import ChangePassword from "./pages/ChangePassword";
+import Reports from "./pages/Reports";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -138,6 +139,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Reports />
                 </Layout>
               </ProtectedRoute>
             }

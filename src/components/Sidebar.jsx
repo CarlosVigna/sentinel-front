@@ -7,8 +7,7 @@ export default function Sidebar() {
   const { user, logout } = useContext(AuthContext);
 
   function isActive(path) {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
+    return location.pathname === path;
   }
 
   return (
@@ -55,9 +54,8 @@ export default function Sidebar() {
             Protocolos
           </MenuItem>
 
-          {/* 🔥 NOVO */}
           <MenuItem to="/reports" active={isActive("/reports")}>
-            📊 Relatórios
+            Relatórios
           </MenuItem>
 
           {user?.role === "ADMIN" && (
@@ -93,7 +91,7 @@ function MenuItem({ to, active, children }) {
   );
 }
 
-// ===== estilos (mantive os seus) =====
+// ===== estilos =====
 
 const sidebarStyle = {
   width: "290px",
@@ -104,8 +102,6 @@ const sidebarStyle = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "space-between",
-  borderRight: "1px solid rgba(255,255,255,0.06)",
-  boxShadow: "10px 0 30px rgba(15, 23, 42, 0.10)",
 };
 
 const logoAreaStyle = {
@@ -119,13 +115,12 @@ const logoIconStyle = {
   width: "50px",
   height: "50px",
   borderRadius: "16px",
-  background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+  background: "#facc15",
   color: "#0f172a",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "800",
-  fontSize: "22px",
 };
 
 const logoTitleStyle = {
@@ -137,16 +132,13 @@ const logoTitleStyle = {
 const logoSubtitleStyle = {
   margin: "4px 0 0",
   fontSize: "13px",
-  color: "rgba(255,255,255,0.65)",
+  opacity: 0.7,
 };
 
 const profileCardStyle = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  background: "rgba(255,255,255,0.05)",
-  borderRadius: "18px",
-  padding: "14px",
   marginBottom: "28px",
 };
 
@@ -154,7 +146,7 @@ const avatarStyle = {
   width: "44px",
   height: "44px",
   borderRadius: "999px",
-  background: "rgba(250,204,21,0.18)",
+  background: "#facc15",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
