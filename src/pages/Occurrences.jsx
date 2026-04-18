@@ -31,6 +31,11 @@ export default function Occurrences() {
   const [success, setSuccess] = useState("");
   const [activeStatus, setActiveStatus] = useState(statusFromUrl);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [filters, setFilters] = useState({
+    plate: "",
+    category: "",
+    protocol: "",
+  });
 
   const [categories, setCategories] = useState([]);
   const [protocols, setProtocols] = useState([]);
@@ -236,7 +241,7 @@ export default function Occurrences() {
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text || "");
-    } catch {}
+    } catch { }
   }
 
   function getStatusStyle(status) {
@@ -299,6 +304,14 @@ export default function Occurrences() {
     }
   }
 
+  const filteredOccurrences = occurrences.filter((o) => {
+    return (
+      (o.plate || "").toLowerCase().includes(filters.plate.toLowerCase()) &&
+      (o.categoryName || "").toLowerCase().includes(filters.category.toLowerCase()) &&
+      (o.protocolName || "").toLowerCase().includes(filters.protocol.toLowerCase())
+    );
+  });
+
   const pageNumbers = useMemo(() => {
     return Array.from({ length: totalPages }, (_, i) => i);
   }, [totalPages]);
@@ -308,158 +321,173 @@ export default function Occurrences() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={topHeaderStyle}>
-        <div>
-          <h1 style={titleStyle}>Ocorrências</h1>
-          <p style={subtitleStyle}>
-            Visualização operacional compacta com ações rápidas e detalhes sob demanda.
-          </p>
-        </div>
+  <div style={pageStyle}>
+    <div style={topHeaderStyle}>
+      <div>
+        <h1 style={titleStyle}>Ocorrências</h1>
+        <p style={subtitleStyle}>
+          Visualização operacional compacta com ações rápidas e detalhes sob demanda.
+        </p>
       </div>
+    </div>
 
-      <div style={tabsContainerStyle}>
-        {STATUS_TABS.map((tab) => {
-          const active = activeStatus === tab.key;
+    <div style={tabsContainerStyle}>
+      {STATUS_TABS.map((tab) => {
+        const active = activeStatus === tab.key;
 
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => {
-                setSuccess("");
-                setError("");
-                navigate(`/occurrences?status=${tab.key}`);
-              }}
-              style={{
-                ...tabButtonStyle,
-                background: active ? tab.bg : "#ffffff",
-                color: active ? tab.color : "#334155",
-                border: `1px solid ${active ? tab.border : "#cbd5e1"}`,
-                boxShadow: active ? "0 8px 20px rgba(15,23,42,0.06)" : "none",
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => {
+              setSuccess("");
+              setError("");
+              navigate(`/occurrences?status=${tab.key}`);
+            }}
+            style={{
+              ...tabButtonStyle,
+              background: active ? tab.bg : "#ffffff",
+              color: active ? tab.color : "#334155",
+              border: `1px solid ${active ? tab.border : "#cbd5e1"}`,
+              boxShadow: active ? "0 8px 20px rgba(15,23,42,0.06)" : "none",
+            }}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
 
-      {error && <div style={errorStyle}>{error}</div>}
-      {success && <div style={successStyle}>{success}</div>}
+    {/* FILTROS */}
+    <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+      <input
+        placeholder="Placa"
+        value={filters.plate}
+        onChange={(e) =>
+          setFilters({ ...filters, plate: e.target.value })
+        }
+        style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "140px" }}
+      />
 
-      {occurrences.length === 0 ? (
-        <div style={emptyStyle}>Nenhuma ocorrência encontrada.</div>
-      ) : (
-        <div style={tableCardStyle}>
-          <div style={tableWrapperStyle}>
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Código</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Categoria</th>
-                  <th style={thStyle}>Protocolo</th>
-                  <th style={thStyle}>Placa</th>
-                  <th style={thStyle}>Criado por</th>
-                  <th style={thStyle}>Atualizado em</th>
-                  <th style={thStyle}>Ações</th>
-                </tr>
-              </thead>
+      <input
+        placeholder="Categoria"
+        value={filters.category}
+        onChange={(e) =>
+          setFilters({ ...filters, category: e.target.value })
+        }
+        style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "140px" }}
+      />
 
-              <tbody>
-                {occurrences.map((occurrence, index) => (
-                  <tr
-                    key={occurrence.id}
-                    style={{
-                      ...trStyle,
-                      background:
-                        String(occurrence.id) === String(highlightId)
-                          ? "#dbeafe"
-                          : index % 2 === 0
-                          ? "#ffffff"
-                          : "#f8fafc",
-                    }}
-                  >
-                    <td style={tdStyle}>
-                      <div style={codeCellStyle}>
-                        <span style={mainCellTextStyle}>#{occurrence.id}</span>
-                        <span style={codeDateStyle}>
-                          {formatDateTime(occurrence.createdAt)}
-                        </span>
-                      </div>
-                    </td>
+      <input
+        placeholder="Protocolo"
+        value={filters.protocol}
+        onChange={(e) =>
+          setFilters({ ...filters, protocol: e.target.value })
+        }
+        style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "140px" }}
+      />
+    </div>
 
-                    <td style={tdStyle}>
-                      <span
-                        style={{
-                          ...statusBadgeStyle,
-                          ...getStatusStyle(occurrence.status),
-                        }}
+    {error && <div style={errorStyle}>{error}</div>}
+    {success && <div style={successStyle}>{success}</div>}
+
+    {filteredOccurrences.length === 0 ? (
+      <div style={emptyStyle}>Nenhuma ocorrência encontrada.</div>
+    ) : (
+      <div style={tableCardStyle}>
+        <div style={tableWrapperStyle}>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Placa</th>
+                <th style={thStyle}>Categoria</th>
+                <th style={thStyle}>Protocolo</th>
+                <th style={thStyle}>Atualizado em</th>
+                <th style={thStyle}>Criado por</th>
+                <th style={thStyle}>Observações</th>
+                <th style={thStyle}>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredOccurrences.map((occurrence, index) => (
+                <tr
+                  key={occurrence.id}
+                  style={{
+                    ...trStyle,
+                    background:
+                      String(occurrence.id) === String(highlightId)
+                        ? "#dbeafe"
+                        : index % 2 === 0
+                        ? "#ffffff"
+                        : "#f8fafc",
+                  }}
+                >
+                  <td style={tdStyle}>
+                    <span style={platePillStyle}>{occurrence.plate || "-"}</span>
+                  </td>
+
+                  <td style={tdStyle}>{occurrence.categoryName || "-"}</td>
+
+                  <td style={tdStyle}>{occurrence.protocolName || "-"}</td>
+
+                  <td style={tdStyle}>{formatDateTime(occurrence.updatedAt)}</td>
+
+                  <td style={tdStyle}>{occurrence.createdByName || "-"}</td>
+
+                  <td style={tdStyle}>{occurrence.description || "-"}</td>
+
+                  <td style={tdStyle}>
+                    <div style={rowActionsStyle}>
+                      <button
+                        type="button"
+                        onClick={() => openDetailsModal(occurrence)}
+                        style={ghostButtonStyle}
                       >
-                        {getStatusLabel(occurrence.status)}
-                      </span>
-                    </td>
+                        Ver
+                      </button>
 
-                    <td style={tdStyle}>{occurrence.categoryName || "-"}</td>
-                    <td style={tdStyle}>{occurrence.protocolName || "-"}</td>
-                    <td style={tdStyle}>
-                      <span style={platePillStyle}>{occurrence.plate || "-"}</span>
-                    </td>
-                    <td style={tdStyle}>{occurrence.createdByName || "-"}</td>
-                    <td style={tdStyle}>{formatDateTime(occurrence.updatedAt)}</td>
-
-                    <td style={tdStyle}>
-                      <div style={rowActionsStyle}>
-                        <button
-                          type="button"
-                          onClick={() => openDetailsModal(occurrence)}
-                          style={ghostButtonStyle}
-                        >
-                          Ver
-                        </button>
-
-                        {(occurrence.status === "OPEN" ||
-                          occurrence.status === "IN_PROGRESS") && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleResolve(occurrence.id)}
-                              style={primaryButtonStyle}
-                              disabled={actionLoadingId === occurrence.id}
-                            >
-                              {actionLoadingId === occurrence.id ? "..." : "Resolver"}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleCancel(occurrence.id)}
-                              style={dangerButtonStyle}
-                              disabled={actionLoadingId === occurrence.id}
-                            >
-                              {actionLoadingId === occurrence.id ? "..." : "Cancelar"}
-                            </button>
-                          </>
-                        )}
-
-                        {(occurrence.status === "RESOLVED" ||
-                          occurrence.status === "CANCELED") && (
+                      {(occurrence.status === "OPEN" ||
+                        occurrence.status === "IN_PROGRESS") && (
+                        <>
                           <button
                             type="button"
-                            onClick={() => handleReopen(occurrence.id)}
-                            style={warningButtonStyle}
+                            onClick={() => handleResolve(occurrence.id)}
+                            style={primaryButtonStyle}
                             disabled={actionLoadingId === occurrence.id}
                           >
-                            {actionLoadingId === occurrence.id ? "..." : "Reabrir"}
+                            {actionLoadingId === occurrence.id ? "..." : "Resolver"}
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCancel(occurrence.id)}
+                            style={dangerButtonStyle}
+                            disabled={actionLoadingId === occurrence.id}
+                          >
+                            {actionLoadingId === occurrence.id ? "..." : "Cancelar"}
+                          </button>
+                        </>
+                      )}
+
+                      {(occurrence.status === "RESOLVED" ||
+                        occurrence.status === "CANCELED") && (
+                        <button
+                          type="button"
+                          onClick={() => handleReopen(occurrence.id)}
+                          style={warningButtonStyle}
+                          disabled={actionLoadingId === occurrence.id}
+                        >
+                          {actionLoadingId === occurrence.id ? "..." : "Reabrir"}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
           <div style={paginationStyle}>
             <button
@@ -524,14 +552,14 @@ export default function Occurrences() {
               <div style={detailsHeaderActionsStyle}>
                 {(selectedDetails.status === "OPEN" ||
                   selectedDetails.status === "IN_PROGRESS") && (
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(selectedDetails)}
-                    style={secondaryButtonStyle}
-                  >
-                    Editar
-                  </button>
-                )}
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(selectedDetails)}
+                      style={secondaryButtonStyle}
+                    >
+                      Editar
+                    </button>
+                  )}
 
                 <button
                   type="button"
