@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -13,8 +14,9 @@ export default function Sidebar() {
   return (
     <aside style={sidebarStyle}>
       <div>
+        {/* LOGO */}
         <div style={logoAreaStyle}>
-          <div style={logoIconStyle}>S</div>
+          <img src={logo} alt="Sentinel" style={logoImageStyle} />
 
           <div>
             <h1 style={logoTitleStyle}>Sentinel</h1>
@@ -34,34 +36,15 @@ export default function Sidebar() {
         </div>
 
         <nav style={menuStyle}>
-          <MenuItem to="/" active={isActive("/")}>
-            Dashboard
-          </MenuItem>
-
-          <MenuItem to="/occurrences" active={isActive("/occurrences")}>
-            Ocorrências
-          </MenuItem>
-
-          <MenuItem to="/occurrences/new" active={isActive("/occurrences/new")}>
-            Nova Ocorrência
-          </MenuItem>
-
-          <MenuItem to="/categories" active={isActive("/categories")}>
-            Categorias
-          </MenuItem>
-
-          <MenuItem to="/protocols" active={isActive("/protocols")}>
-            Protocolos
-          </MenuItem>
-
-          <MenuItem to="/reports" active={isActive("/reports")}>
-            Relatórios
-          </MenuItem>
+          <MenuItem to="/" active={isActive("/")}>Dashboard</MenuItem>
+          <MenuItem to="/occurrences" active={isActive("/occurrences")}>Ocorrências</MenuItem>
+          <MenuItem to="/occurrences/new" active={isActive("/occurrences/new")}>Nova Ocorrência</MenuItem>
+          <MenuItem to="/categories" active={isActive("/categories")}>Categorias</MenuItem>
+          <MenuItem to="/protocols" active={isActive("/protocols")}>Protocolos</MenuItem>
+          <MenuItem to="/reports" active={isActive("/reports")}>Relatórios</MenuItem>
 
           {user?.role === "ADMIN" && (
-            <MenuItem to="/users" active={isActive("/users")}>
-              Usuários
-            </MenuItem>
+            <MenuItem to="/users" active={isActive("/users")}>Usuários</MenuItem>
           )}
 
           <MenuItem to="/change-password" active={isActive("/change-password")}>
@@ -107,31 +90,26 @@ const sidebarStyle = {
 const logoAreaStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "14px",
+  gap: "12px",
   marginBottom: "30px",
 };
 
-const logoIconStyle = {
-  width: "50px",
-  height: "50px",
-  borderRadius: "16px",
-  background: "#facc15",
-  color: "#0f172a",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontWeight: "800",
+const logoImageStyle = {
+  width: "48px",
+  height: "48px",
+  borderRadius: "12px",
+  objectFit: "cover",
 };
 
 const logoTitleStyle = {
   margin: 0,
-  fontSize: "24px",
+  fontSize: "22px",
   fontWeight: "800",
 };
 
 const logoSubtitleStyle = {
   margin: "4px 0 0",
-  fontSize: "13px",
+  fontSize: "12px",
   opacity: 0.7,
 };
 

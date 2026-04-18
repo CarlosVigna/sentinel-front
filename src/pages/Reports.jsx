@@ -85,86 +85,102 @@ export default function Reports() {
 
   async function exportPDF() {
   const pdf = new jsPDF("landscape");
-
   const pageWidth = pdf.internal.pageSize.getWidth();
 
-  let y = 10;
+  let y = 12;
 
-  // 🧠 CABEÇALHO
-  pdf.setFontSize(18);
-  pdf.text("Relatório de Ocorrências", 10, y);
+  // 🧠 CABEÇALHO BONITO
+  pdf.setFontSize(20);
+  pdf.setTextColor(15, 23, 42);
+  pdf.text("RELATÓRIO DE OCORRÊNCIAS", 10, y);
+
+  y += 6;
 
   pdf.setFontSize(12);
-  pdf.text("Sistema Sentinel", 10, y + 6);
+  pdf.setTextColor(100);
+  pdf.text("Sistema Sentinel", 10, y);
+
+  y += 6;
 
   pdf.setFontSize(10);
-  pdf.text(`Data de emissão: ${new Date().toLocaleString("pt-BR")}`, 10, y + 12);
+  pdf.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, y);
 
-  pdf.text(`Emitido por: Operador`, 10, y + 18); // depois podemos puxar do user logado
+  y += 5;
 
-  y += 28;
+  pdf.text(`Emitido por: Operador`, 10, y);
 
-  // 🔥 LINHA SEPARADORA
-  pdf.setDrawColor(200);
+  y += 8;
+
+  // 🔥 LINHA DIVISÓRIA
+  pdf.setDrawColor(180);
   pdf.line(10, y, pageWidth - 10, y);
 
   y += 8;
 
-  // 📊 CABEÇALHO TABELA
+  // 📊 CABEÇALHO DA TABELA
   pdf.setFontSize(11);
   pdf.setFont(undefined, "bold");
+  pdf.setTextColor(0);
 
   pdf.text("Placa", 10, y);
-  pdf.text("Categoria", 50, y);
-  pdf.text("Status", 110, y);
-  pdf.text("Observações", 150, y);
-  pdf.text("Atualizado", 240, y);
+  pdf.text("Categoria", 55, y);
+  pdf.text("Status", 120, y);
+  pdf.text("Observações", 165, y);
+  pdf.text("Atualizado", 250, y);
 
   pdf.setFont(undefined, "normal");
 
-  y += 6;
+  y += 5;
 
+  pdf.setDrawColor(200);
   pdf.line(10, y, pageWidth - 10, y);
 
   y += 6;
 
-  // 📊 DADOS
-  sorted.forEach((o, index) => {
-    if (y > 190) {
+  // 📊 LINHAS
+  sorted.forEach((o) => {
+    if (y > 185) {
       pdf.addPage();
-      y = 10;
+      y = 12;
     }
 
     const status = formatStatus(o.status);
-    const desc = (o.description || "-").slice(0, 80);
+    const desc = (o.description || "-").slice(0, 90);
 
     pdf.setFontSize(9);
+    pdf.setTextColor(20);
 
     pdf.text(o.plate || "-", 10, y);
-    pdf.text(o.category || "-", 50, y);
-    pdf.text(status, 110, y);
-    pdf.text(desc, 150, y);
-    pdf.text(formatDate(o.updatedAt), 240, y);
+    pdf.text(o.category || "-", 55, y);
+    pdf.text(status, 120, y);
+    pdf.text(desc, 165, y);
+    pdf.text(formatDate(o.updatedAt), 250, y);
 
     y += 6;
   });
 
-  // 🔻 RODAPÉ
-  const pageCount = pdf.getNumberOfPages();
+  // 🔻 RODAPÉ BONITO
+  const totalPages = pdf.getNumberOfPages();
 
-  for (let i = 1; i <= pageCount; i++) {
+  for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
 
     pdf.setFontSize(9);
     pdf.setTextColor(120);
 
+    pdf.line(10, 195, pageWidth - 10, 195);
+
     pdf.text(
-      `Sentinel © ${new Date().getFullYear()} - Relatório gerado automaticamente`,
+      `Sentinel • Relatório automático • ${new Date().getFullYear()}`,
       10,
       200
     );
 
-    pdf.text(`Página ${i} de ${pageCount}`, pageWidth - 40, 200);
+    pdf.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth - 40,
+      200
+    );
   }
 
   pdf.save("relatorio-sentinel.pdf");

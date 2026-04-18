@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 function Login() {
   const { login, user } = useContext(AuthContext);
@@ -43,7 +44,11 @@ function Login() {
       <div style={heroStyle}>
         <div style={heroOverlayStyle} />
         <div style={heroContentStyle}>
-          <div style={brandBadgeStyle}>S</div>
+          <img
+            src={logo}
+            alt="Sentinel"
+            style={{ width: 80, marginBottom: 20 }}
+          />
           <h1 style={heroTitleStyle}>Sentinel</h1>
           <p style={heroSubtitleStyle}>
             Plataforma de gestão de ocorrências, protocolos e operação monitorada.
