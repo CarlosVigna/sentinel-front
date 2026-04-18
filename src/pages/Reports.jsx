@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import logo from "../assets/logo.png";
 
 export default function Reports() {
   const [data, setData] = useState([]);
@@ -40,7 +41,7 @@ export default function Reports() {
       "/occurrences/report" + (query.length ? `?${query.join("&")}` : "");
 
     const res = await apiFetch(url);
-    setData(res);
+    setData(res.content || res);
   }
 
   function formatStatus(status) {
@@ -89,14 +90,14 @@ export default function Reports() {
 
     let y = 12;
 
-    const logo = new Image();
-    logo.src = "/logo.png"; // ou base64 depois
+    const logoImg = new Image();
+    logoImg.src = logo;
 
     await new Promise((resolve) => {
-      logo.onload = resolve;
+      logoImg.onload = resolve;
     });
 
-    pdf.addImage(logo, "PNG", 10, 5, 30, 15);
+    pdf.addImage(logoImg, "PNG", 10, 5, 30, 15);
     // 🧠 CABEÇALHO BONITO
     pdf.setFontSize(20);
     pdf.setTextColor(15, 23, 42);
