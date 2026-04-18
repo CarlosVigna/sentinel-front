@@ -21,66 +21,66 @@ export default function Dashboard() {
   }, []);
 
   async function loadDashboard() {
-  try {
-    setLoading(true);
-    setError("");
+    try {
+      setLoading(true);
+      setError("");
 
-    const statuses = ["OPEN", "RESOLVED", "CANCELED"];
+      const statuses = ["OPEN", "RESOLVED", "CANCELED"];
 
-    const results = await Promise.all(
-      statuses.map(async (status) => {
-        try {
-          const data = await listOccurrences(0, 100, status);
-          return data ?? { content: [], totalElements: 0 };
-        } catch {
-          return { content: [], totalElements: 0 };
-        }
-      })
-    );
+      const results = await Promise.all(
+        statuses.map(async (status) => {
+          try {
+            const data = await listOccurrences(0, 100, status);
+            return data ?? { content: [], totalElements: 0 };
+          } catch {
+            return { content: [], totalElements: 0 };
+          }
+        })
+      );
 
-    const openResult = results[0] || { content: [], totalElements: 0 };
-    const resolvedResult = results[1] || { content: [], totalElements: 0 };
-    const canceledResult = results[2] || { content: [], totalElements: 0 };
+      const openResult = results[0] || { content: [], totalElements: 0 };
+      const resolvedResult = results[1] || { content: [], totalElements: 0 };
+      const canceledResult = results[2] || { content: [], totalElements: 0 };
 
-    const openOccurrences = openResult.content || [];
-    const resolvedOccurrences = resolvedResult.content || [];
-    const canceledOccurrences = canceledResult.content || [];
+      const openOccurrences = openResult.content || [];
+      const resolvedOccurrences = resolvedResult.content || [];
+      const canceledOccurrences = canceledResult.content || [];
 
-    const allOccurrences = [
-      ...openOccurrences,
-      ...resolvedOccurrences,
-      ...canceledOccurrences,
-    ];
+      const allOccurrences = [
+        ...openOccurrences,
+        ...resolvedOccurrences,
+        ...canceledOccurrences,
+      ];
 
-    setStats({
-      total:
-        (openResult.totalElements || 0) +
-        (resolvedResult.totalElements || 0) +
-        (canceledResult.totalElements || 0),
-      open: openResult.totalElements || 0,
-      resolved: resolvedResult.totalElements || 0,
-      canceled: canceledResult.totalElements || 0,
-    });
+      setStats({
+        total:
+          (openResult.totalElements || 0) +
+          (resolvedResult.totalElements || 0) +
+          (canceledResult.totalElements || 0),
+        open: openResult.totalElements || 0,
+        resolved: resolvedResult.totalElements || 0,
+        canceled: canceledResult.totalElements || 0,
+      });
 
-    const uniqueOccurrences = Array.from(
-      new Map(allOccurrences.map((occ) => [occ.id, occ])).values()
-    );
+      const uniqueOccurrences = Array.from(
+        new Map(allOccurrences.map((occ) => [occ.id, occ])).values()
+      );
 
-    const recent = uniqueOccurrences
-      .sort((a, b) => {
-        const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 5);
+      const recent = uniqueOccurrences
+        .sort((a, b) => {
+          const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return dateB - dateA;
+        })
+        .slice(0, 5);
 
-    setRecentOccurrences(recent);
-  } catch (err) {
-    setError(err.message || "Erro ao carregar dashboard.");
-  } finally {
-    setLoading(false);
+      setRecentOccurrences(recent);
+    } catch (err) {
+      setError(err.message || "Erro ao carregar dashboard.");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   function formatDateTime(value) {
     if (!value) return "-";
@@ -236,6 +236,11 @@ export default function Dashboard() {
                   <tr
                     key={occ.id}
                     onClick={() => openOccurrence(occ)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#e2e8f0")}
+                    onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      index % 2 === 0 ? "#ffffff" : "#f8fafc")
+                    }
                     style={{
                       ...clickableRowStyle,
                       background: index % 2 === 0 ? "#ffffff" : "#f8fafc",
@@ -269,8 +274,20 @@ export default function Dashboard() {
 }
 
 function StatCard({ title, value, subtitle, color, onClick }) {
+  const [hover, setHover] = useState(false);
+
   return (
-    <button type="button" onClick={onClick} style={{ ...statCardStyle, borderTop: `5px solid ${color}` }}>
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        ...statCardStyle,
+        ...(hover ? statCardHover : {}),
+        borderTop: `5px solid ${color}`,
+      }}
+    >
       <div style={statCardTopStyle}>
         <span style={statTitleStyle}>{title}</span>
       </div>
@@ -301,9 +318,10 @@ const dashboardHeaderStyle = {
 
 const pageTitleStyle = {
   margin: 0,
-  fontSize: "30px",
+  fontSize: "34px",
   color: "#0f172a",
-  fontWeight: "800",
+  fontWeight: "900",
+  letterSpacing: "-0.5px",
 };
 
 const pageSubtitleStyle = {
@@ -326,8 +344,13 @@ const statCardStyle = {
   padding: "20px",
   textAlign: "left",
   cursor: "pointer",
-  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
-  transition: "all 0.2s ease",
+  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
+  transition: "all 0.25s ease",
+};
+
+const statCardHover = {
+  transform: "translateY(-4px)",
+  boxShadow: "0 20px 40px rgba(15, 23, 42, 0.12)",
 };
 
 const statCardTopStyle = {
@@ -359,7 +382,7 @@ const sectionCardStyle = {
   background: "white",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
-  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
+  boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
   overflow: "hidden",
 };
 
@@ -408,16 +431,18 @@ const tdStyle = {
 
 const clickableRowStyle = {
   cursor: "pointer",
+  transition: "all 0.15s ease",
 };
 
 const platePillStyle = {
   display: "inline-block",
-  padding: "6px 10px",
+  padding: "6px 12px",
   borderRadius: "999px",
-  background: "#f8fafc",
+  background: "#f1f5f9",
   border: "1px solid #e2e8f0",
-  fontWeight: "700",
-  letterSpacing: "0.04em",
+  fontWeight: "800",
+  letterSpacing: "0.06em",
+  fontSize: "13px",
 };
 
 const errorStyle = {

@@ -14,7 +14,7 @@ export default function Sidebar() {
   return (
     <aside style={sidebarStyle}>
       <div>
-        {/* LOGO */}
+        {/* 🔥 LOGO */}
         <div style={logoAreaStyle}>
           <img src={logo} alt="Sentinel" style={logoImageStyle} />
 
@@ -24,6 +24,7 @@ export default function Sidebar() {
           </div>
         </div>
 
+        {/* 🔥 PERFIL */}
         <div style={profileCardStyle}>
           <div style={avatarStyle}>
             {(user?.nome || "U").charAt(0).toUpperCase()}
@@ -35,6 +36,7 @@ export default function Sidebar() {
           </div>
         </div>
 
+        {/* 🔥 MENU */}
         <nav style={menuStyle}>
           <MenuItem to="/" active={isActive("/")}>Dashboard</MenuItem>
           <MenuItem to="/occurrences" active={isActive("/occurrences")}>Ocorrências</MenuItem>
@@ -53,6 +55,7 @@ export default function Sidebar() {
         </nav>
       </div>
 
+      {/* 🔥 LOGOUT */}
       <button type="button" onClick={logout} style={logoutButtonStyle}>
         Sair
       </button>
@@ -74,13 +77,13 @@ function MenuItem({ to, active, children }) {
   );
 }
 
-// ===== estilos =====
+// ===== ESTILOS =====
 
 const sidebarStyle = {
-  width: "290px",
+  width: "270px",
   minHeight: "100vh",
-  padding: "22px 18px",
-  background: "#626b80",
+  padding: "24px 18px",
+  background: "#0f172a", // 🔥 DARK PREMIUM
   color: "#ffffff",
   display: "flex",
   flexDirection: "column",
@@ -91,64 +94,76 @@ const logoAreaStyle = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  marginBottom: "30px",
+  marginBottom: "32px",
 };
 
 const logoImageStyle = {
-  width: "48px",
-  height: "48px",
-  borderRadius: "12px",
+  width: "42px",
+  height: "42px",
+  borderRadius: "10px",
   objectFit: "cover",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
 };
 
 const logoTitleStyle = {
   margin: 0,
-  fontSize: "22px",
+  fontSize: "20px",
   fontWeight: "800",
 };
 
 const logoSubtitleStyle = {
-  margin: "4px 0 0",
+  margin: "2px 0 0",
   fontSize: "12px",
-  opacity: 0.7,
+  color: "#94a3b8",
 };
 
 const profileCardStyle = {
   display: "flex",
   alignItems: "center",
   gap: "12px",
-  marginBottom: "28px",
+  marginBottom: "30px",
 };
 
 const avatarStyle = {
-  width: "44px",
-  height: "44px",
+  width: "42px",
+  height: "42px",
   borderRadius: "999px",
   background: "#facc15",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontWeight: "800",
+  color: "#0f172a",
 };
 
-const profileNameStyle = { fontSize: "14px", fontWeight: "700" };
-const profileRoleStyle = { fontSize: "12px", opacity: 0.7 };
+const profileNameStyle = {
+  fontSize: "14px",
+  fontWeight: "700",
+};
+
+const profileRoleStyle = {
+  fontSize: "12px",
+  color: "#94a3b8",
+};
 
 const menuStyle = {
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "8px",
 };
 
 const menuItemStyle = {
   textDecoration: "none",
-  color: "#fff",
-  padding: "12px",
+  color: "#cbd5f5",
+  padding: "12px 14px",
   borderRadius: "12px",
+  transition: "all 0.2s",
 };
 
 const menuItemActiveStyle = {
-  background: "#8f9399",
+  background: "#1e293b",
+  color: "#fff",
+  fontWeight: "600",
 };
 
 const logoutButtonStyle = {
@@ -157,4 +172,6 @@ const logoutButtonStyle = {
   padding: "12px",
   borderRadius: "12px",
   cursor: "pointer",
+  border: "none",
+  fontWeight: "700",
 };

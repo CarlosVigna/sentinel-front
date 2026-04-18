@@ -41,38 +41,26 @@ function Login() {
 
   return (
     <div style={pageStyle}>
+      {/* 🔥 LADO ESQUERDO */}
       <div style={heroStyle}>
         <div style={heroOverlayStyle} />
+
         <div style={heroContentStyle}>
-          <img
-            src={logo}
-            alt="Sentinel"
-            style={{ width: 80, marginBottom: 20 }}
-          />
+          <img src={logo} alt="Sentinel" style={heroLogoStyle} />
+
           <h1 style={heroTitleStyle}>Sentinel</h1>
-          <p style={heroSubtitleStyle}>
-            Plataforma de gestão de ocorrências, protocolos e operação monitorada.
-          </p>
-
-          <div style={heroHighlightsStyle}>
-            <div style={highlightCardStyle}>
-              <strong>Operação centralizada</strong>
-              <span>Ocorrências, protocolos e usuários em um único ambiente.</span>
-            </div>
-
-            <div style={highlightCardStyle}>
-              <strong>Fluxo rápido</strong>
-              <span>Mais clareza visual para tratar eventos com agilidade.</span>
-            </div>
-          </div>
+          <p style={heroSubtitleStyle}>Painel operacional</p>
         </div>
       </div>
 
+      {/* 🔥 FORM */}
       <div style={formSideStyle}>
         <form onSubmit={handleSubmit} style={formCardStyle}>
           <div style={formHeaderStyle}>
             <h2 style={formTitleStyle}>Entrar</h2>
-            <p style={formSubtitleStyle}>Acesse sua conta para continuar no Sentinel.</p>
+            <p style={formSubtitleStyle}>
+              Acesse sua conta para continuar no Sentinel.
+            </p>
           </div>
 
           {error && <div style={errorStyle}>{error}</div>}
@@ -122,78 +110,55 @@ function Login() {
 
 export default Login;
 
+// ===== ESTILOS =====
+
 const pageStyle = {
   minHeight: "100vh",
   display: "grid",
-  gridTemplateColumns: "1.15fr 0.85fr",
+  gridTemplateColumns: "1.2fr 0.8fr",
   background: "#e2e8f0",
 };
 
 const heroStyle = {
   position: "relative",
-  background: "linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)",
-  color: "white",
+  background: "linear-gradient(135deg, #0f172a, #1e3a8a)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "48px",
-  overflow: "hidden",
+  padding: "40px",
 };
 
 const heroOverlayStyle = {
   position: "absolute",
   inset: 0,
   background:
-    "radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 32%), radial-gradient(circle at bottom left, rgba(255,255,255,0.10), transparent 28%)",
+    "linear-gradient(120deg, rgba(255,255,255,0.05) 0%, transparent 60%)",
 };
 
 const heroContentStyle = {
   position: "relative",
   zIndex: 1,
-  maxWidth: "560px",
+  textAlign: "center",
 };
 
-const brandBadgeStyle = {
-  width: "56px",
-  height: "56px",
-  borderRadius: "18px",
-  background: "rgba(255,255,255,0.16)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "24px",
-  fontWeight: "800",
-  marginBottom: "22px",
-  border: "1px solid rgba(255,255,255,0.18)",
+const heroLogoStyle = {
+  width: "320px",
+  maxWidth: "90%",
+  marginBottom: "30px",
+  filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.6))",
 };
 
 const heroTitleStyle = {
-  margin: 0,
-  fontSize: "48px",
+  fontSize: "42px",
   fontWeight: "800",
+  color: "#fff",
+  margin: 0,
 };
 
 const heroSubtitleStyle = {
-  marginTop: "14px",
-  fontSize: "18px",
-  lineHeight: 1.6,
-  color: "rgba(255,255,255,0.88)",
-};
-
-const heroHighlightsStyle = {
-  display: "grid",
-  gap: "14px",
-  marginTop: "30px",
-};
-
-const highlightCardStyle = {
-  display: "grid",
-  gap: "6px",
-  padding: "16px",
-  borderRadius: "16px",
-  background: "rgba(255,255,255,0.08)",
-  border: "1px solid rgba(255,255,255,0.12)",
-  backdropFilter: "blur(4px)",
+  marginTop: "10px",
+  fontSize: "16px",
+  color: "rgba(255,255,255,0.7)",
 };
 
 const formSideStyle = {
@@ -205,12 +170,11 @@ const formSideStyle = {
 
 const formCardStyle = {
   width: "100%",
-  maxWidth: "430px",
-  background: "white",
-  padding: "34px",
-  borderRadius: "24px",
-  boxShadow: "0 25px 60px rgba(15, 23, 42, 0.12)",
-  border: "1px solid #e2e8f0",
+  maxWidth: "420px",
+  padding: "32px",
+  borderRadius: "20px",
+  background: "#ffffff",
+  boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
 };
 
 const formHeaderStyle = {
@@ -248,7 +212,6 @@ const inputStyle = {
   outline: "none",
   boxSizing: "border-box",
   fontSize: "15px",
-  background: "#fff",
 };
 
 const passwordWrapperStyle = {
@@ -278,7 +241,6 @@ const submitButtonStyle = {
   fontSize: "16px",
   fontWeight: "800",
   marginTop: "8px",
-  boxShadow: "0 16px 30px rgba(37, 99, 235, 0.2)",
 };
 
 const errorStyle = {
