@@ -84,20 +84,91 @@ export default function Reports() {
   }
 
   async function exportPDF() {
-    const element = document.getElementById("report-area");
+  const pdf = new jsPDF("landscape");
 
-    const canvas = await html2canvas(element, { scale: 2 });
-    const img = canvas.toDataURL("image/png");
+  const pageWidth = pdf.internal.pageSize.getWidth();
 
-    const pdf = new jsPDF("landscape");
+  let y = 10;
 
-    pdf.setFontSize(16);
-    pdf.text("Relatório de Ocorrências - Sentinel", 10, 10);
+  // 🧠 CABEÇALHO
+  pdf.setFontSize(18);
+  pdf.text("Relatório de Ocorrências", 10, y);
 
-    pdf.addImage(img, "PNG", 10, 20, 270, 0);
+  pdf.setFontSize(12);
+  pdf.text("Sistema Sentinel", 10, y + 6);
 
-    pdf.save("relatorio.pdf");
+  pdf.setFontSize(10);
+  pdf.text(`Data de emissão: ${new Date().toLocaleString("pt-BR")}`, 10, y + 12);
+
+  pdf.text(`Emitido por: Operador`, 10, y + 18); // depois podemos puxar do user logado
+
+  y += 28;
+
+  // 🔥 LINHA SEPARADORA
+  pdf.setDrawColor(200);
+  pdf.line(10, y, pageWidth - 10, y);
+
+  y += 8;
+
+  // 📊 CABEÇALHO TABELA
+  pdf.setFontSize(11);
+  pdf.setFont(undefined, "bold");
+
+  pdf.text("Placa", 10, y);
+  pdf.text("Categoria", 50, y);
+  pdf.text("Status", 110, y);
+  pdf.text("Observações", 150, y);
+  pdf.text("Atualizado", 240, y);
+
+  pdf.setFont(undefined, "normal");
+
+  y += 6;
+
+  pdf.line(10, y, pageWidth - 10, y);
+
+  y += 6;
+
+  // 📊 DADOS
+  sorted.forEach((o, index) => {
+    if (y > 190) {
+      pdf.addPage();
+      y = 10;
+    }
+
+    const status = formatStatus(o.status);
+    const desc = (o.description || "-").slice(0, 80);
+
+    pdf.setFontSize(9);
+
+    pdf.text(o.plate || "-", 10, y);
+    pdf.text(o.category || "-", 50, y);
+    pdf.text(status, 110, y);
+    pdf.text(desc, 150, y);
+    pdf.text(formatDate(o.updatedAt), 240, y);
+
+    y += 6;
+  });
+
+  // 🔻 RODAPÉ
+  const pageCount = pdf.getNumberOfPages();
+
+  for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i);
+
+    pdf.setFontSize(9);
+    pdf.setTextColor(120);
+
+    pdf.text(
+      `Sentinel © ${new Date().getFullYear()} - Relatório gerado automaticamente`,
+      10,
+      200
+    );
+
+    pdf.text(`Página ${i} de ${pageCount}`, pageWidth - 40, 200);
   }
+
+  pdf.save("relatorio-sentinel.pdf");
+}
 
   function copyReport() {
     const text = sorted
