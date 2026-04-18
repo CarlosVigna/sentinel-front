@@ -125,17 +125,18 @@ export default function Reports() {
 
     // ── Cabeçalho ──
     function drawHeader(pdf) {
-      pdf.addImage(logoImg, "PNG", margin, 8, 28, 14);
+      pdf.addImage(logoImg, "PNG", margin, 5, 64, 36);
 
-      pdf.setFontSize(18);
-      pdf.setTextColor(15, 23, 42);
+      // Texto ao lado do logo
+      pdf.setFontSize(16);
+      pdf.setTextColor(60);
       pdf.setFont(undefined, "bold");
-      pdf.text("SENTINEL", margin + 32, 15);
+      pdf.text("Relatório de Ocorrências", margin + 68, 19);
 
-      pdf.setFontSize(10);
-      pdf.setTextColor(100);
+      pdf.setFontSize(9);
+      pdf.setTextColor(120);
       pdf.setFont(undefined, "normal");
-      pdf.text("Relatório de Ocorrências", margin + 32, 21);
+      pdf.text("Sistema Sentinel", margin + 68, 25);
 
       // Info direita
       pdf.setFontSize(9);
@@ -144,89 +145,126 @@ export default function Reports() {
       const dateStr = now.toLocaleString("pt-BR");
       const userName = user?.nome || "Operador";
 
-      pdf.text(`Emitido em: ${dateStr}`, pageWidth - margin, 12, { align: "right" });
-      pdf.text(`Responsável: ${userName}`, pageWidth - margin, 18, { align: "right" });
-      pdf.text(`Total: ${sorted.length} ocorrências`, pageWidth - margin, 24, { align: "right" });
+      pdf.text(`Emitido em: ${dateStr}`, pageWidth - margin, 13, { align: "right" });
+      pdf.text(`Responsável: ${userName}`, pageWidth - margin, 19, { align: "right" });
+      pdf.text(`Total: ${sorted.length} ocorrências`, pageWidth - margin, 25, { align: "right" });
 
-      // Linha
+      // Linha divisória abaixo do logo
       pdf.setDrawColor(200);
-      pdf.line(margin, 28, pageWidth - margin, 28);
+      pdf.line(margin, 43, pageWidth - margin, 43);
     }
 
     drawHeader(pdf);
 
-    // ── Tabela ──
-    const colWidths = [35, 55, 30, 100, 48]; // Placa, Categoria, Status, Obs, Data
+    // ── Calcular larguras dinâmicas ──
     const colLabels = ["Placa", "Categoria", "Status", "Observações", "Atualizado"];
-    let y = 34;
+    const OBS_WIDTH = 160;
+    const COL_PADDING = 4;
+    const COL_GAP = 6; // espaço extra entre Observações e Atualizado
+    const ROW_LINE_HEIGHT = 4;
 
-    // Cabeçalho tabela
-    pdf.setFontSize(9);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(255);
-    pdf.setFillColor(30, 41, 59);
-    pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
+    pdf.setFontSize(8.5);
 
-    let x = margin + 2;
-    colLabels.forEach((label, i) => {
-      pdf.text(label, x, y);
-      x += colWidths[i];
-    });
+    // Medir largura máxima de cada coluna (Placa, Categoria, Status)
+    function measureCol(values) {
+      let max = 0;
+      values.forEach((v) => {
+        const w = pdf.getTextWidth(v || "-");
+        if (w > max) max = w;
+      });
+      return max + COL_PADDING;
+    }
 
-    pdf.setFont(undefined, "normal");
-    y += 8;
+    const plateWidth = Math.max(
+      measureCol(sorted.map((o) => o.plate)),
+      pdf.getTextWidth("Placa") + COL_PADDING
+    );
 
-    // Linhas de dados
+    const categoryWidth = Math.max(
+      measureCol(sorted.map((o) => o.category)),
+      pdf.getTextWidth("Categoria") + COL_PADDING
+    );
+
+    const statusWidth = Math.max(
+      measureCol(sorted.map((o) => formatStatus(o.status))),
+      pdf.getTextWidth("Status") + COL_PADDING
+    );
+
+    const dateWidth = Math.max(
+      measureCol(sorted.map((o) => formatDate(o.updatedAt))),
+      pdf.getTextWidth("Atualizado") + COL_PADDING
+    );
+
+    const colWidths = [plateWidth, categoryWidth, statusWidth, OBS_WIDTH + COL_GAP, dateWidth];
+
+    let y = 58;
+
+    // ── Desenhar cabeçalho da tabela ──
+    function drawTableHeader() {
+      pdf.setFontSize(9);
+      pdf.setFont(undefined, "bold");
+      pdf.setTextColor(255);
+      pdf.setFillColor(30, 41, 59);
+      pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
+
+      let x = margin + 2;
+      colLabels.forEach((label, i) => {
+        pdf.text(label, x, y);
+        x += colWidths[i];
+      });
+
+      pdf.setFont(undefined, "normal");
+      y += 8;
+    }
+
+    drawTableHeader();
+
+    // ── Linhas de dados ──
     sorted.forEach((o, idx) => {
-      if (y > pageHeight - 20) {
-        // Rodapé antes da nova página
+      const statusText = formatStatus(o.status);
+      const desc = o.description || "-";
+      const dateText = formatDate(o.updatedAt);
+
+      // Quebrar texto da observação em múltiplas linhas
+      pdf.setFontSize(8.5);
+      const descLines = pdf.splitTextToSize(desc, OBS_WIDTH);
+      const rowHeight = Math.max(descLines.length, 1) * ROW_LINE_HEIGHT + 2;
+
+      // Verificar se cabe na página
+      if (y + rowHeight > pageHeight - 20) {
         drawFooter(pdf, pageWidth, pageHeight, margin);
         pdf.addPage();
         drawHeader(pdf);
-        y = 34;
-
-        // Re-draw header da tabela
-        pdf.setFontSize(9);
-        pdf.setFont(undefined, "bold");
-        pdf.setTextColor(255);
-        pdf.setFillColor(30, 41, 59);
-        pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
-
-        let xx = margin + 2;
-        colLabels.forEach((label, i) => {
-          pdf.text(label, xx, y);
-          xx += colWidths[i];
-        });
-
-        pdf.setFont(undefined, "normal");
-        y += 8;
+        y = 56;
+        drawTableHeader();
       }
 
       // Zebra striping
       if (idx % 2 === 0) {
         pdf.setFillColor(248, 250, 252);
-        pdf.rect(margin, y - 4, pageWidth - margin * 2, 7, "F");
+        pdf.rect(margin, y - 4, pageWidth - margin * 2, rowHeight, "F");
       }
-
-      const statusText = formatStatus(o.status);
-      const desc = (o.description || "-").slice(0, 70);
-      const dateText = formatDate(o.updatedAt);
 
       pdf.setFontSize(8.5);
       pdf.setTextColor(30);
 
-      x = margin + 2;
+      let x = margin + 2;
       pdf.text(o.plate || "-", x, y);
       x += colWidths[0];
       pdf.text(o.category || "-", x, y);
       x += colWidths[1];
       pdf.text(statusText, x, y);
       x += colWidths[2];
-      pdf.text(desc, x, y);
+
+      // Observação com quebra de linha
+      descLines.forEach((line, lineIdx) => {
+        pdf.text(line, x, y + lineIdx * ROW_LINE_HEIGHT);
+      });
+
       x += colWidths[3];
       pdf.text(dateText, x, y);
 
-      y += 7;
+      y += rowHeight;
     });
 
     // ── Rodapé em todas as páginas ──
@@ -475,8 +513,8 @@ Atualizado: ${formatDate(o.updatedAt)}
                         (e.currentTarget.style.background = "#eef2ff")
                       }
                       onMouseLeave={(e) =>
-                        (e.currentTarget.style.background =
-                          idx % 2 === 0 ? "#ffffff" : "#f8fafc")
+                      (e.currentTarget.style.background =
+                        idx % 2 === 0 ? "#ffffff" : "#f8fafc")
                       }
                     >
                       <td style={tdStyle}>

@@ -195,8 +195,8 @@ const logoContainerStyle = {
 };
 
 const logoStyle = {
-  width: "180px",
-  maxWidth: "50vw",
+  width: "420px",
+  maxWidth: "100vw",
   objectFit: "contain",
   filter: "drop-shadow(0 20px 60px rgba(59,130,246,0.4))",
   animation: "fadeIn 1s ease both",
