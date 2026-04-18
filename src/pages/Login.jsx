@@ -115,13 +115,13 @@ export default Login;
 const pageStyle = {
   minHeight: "100vh",
   display: "grid",
-  gridTemplateColumns: "1.2fr 0.8fr",
+  gridTemplateColumns: "1.5fr 1fr", // 🔥 MAIS ESPAÇO PRO LOGO
   background: "#e2e8f0",
 };
 
 const heroStyle = {
   position: "relative",
-  background: "linear-gradient(135deg, #0f172a, #1e3a8a)",
+  background: "linear-gradient(135deg, #0f172a, #1e40af)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -142,10 +142,11 @@ const heroContentStyle = {
 };
 
 const heroLogoStyle = {
-  width: "320px",
-  maxWidth: "90%",
-  marginBottom: "30px",
-  filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.6))",
+  width: "420px",
+  maxWidth: "100%",
+  marginBottom: "40px",
+  objectFit: "contain",
+  filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.7))",
 };
 
 const heroTitleStyle = {
