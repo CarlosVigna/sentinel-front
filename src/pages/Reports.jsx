@@ -43,6 +43,16 @@ export default function Reports() {
     setData(res);
   }
 
+  function formatStatus(status) {
+    switch (status) {
+      case "OPEN": return "Aberta";
+      case "IN_PROGRESS": return "Em andamento";
+      case "RESOLVED": return "Resolvida";
+      case "CANCELED": return "Cancelada";
+      default: return status;
+    }
+  }
+
   const filtered = data.filter((o) => {
     const date = new Date(o.updatedAt);
 
@@ -73,15 +83,19 @@ export default function Reports() {
     return new Date(date).toLocaleString("pt-BR");
   }
 
-  // 🔥 PDF HORIZONTAL
   async function exportPDF() {
     const element = document.getElementById("report-area");
 
-    const canvas = await html2canvas(element);
+    const canvas = await html2canvas(element, { scale: 2 });
     const img = canvas.toDataURL("image/png");
 
-    const pdf = new jsPDF("landscape"); // 👈 AQUI
-    pdf.addImage(img, "PNG", 10, 10, 270, 0);
+    const pdf = new jsPDF("landscape");
+
+    pdf.setFontSize(16);
+    pdf.text("Relatório de Ocorrências - Sentinel", 10, 10);
+
+    pdf.addImage(img, "PNG", 10, 20, 270, 0);
+
     pdf.save("relatorio.pdf");
   }
 
@@ -89,7 +103,12 @@ export default function Reports() {
     const text = sorted
       .map(
         (o) =>
-          `${o.plate} | ${o.category} | ${o.status} | ${o.description || ""} | ${formatDate(o.updatedAt)}`
+          `Placa: ${o.plate}
+Categoria: ${o.category}
+Status: ${formatStatus(o.status)}
+Observação: ${(o.description || "-").slice(0, 100)}
+Atualizado: ${formatDate(o.updatedAt)}
+-----------------------------`
       )
       .join("\n");
 
@@ -100,21 +119,19 @@ export default function Reports() {
     <div style={{ padding: "20px" }}>
       <h1 style={{ marginBottom: 10 }}>Relatórios</h1>
 
-      {/* 🔥 CABEÇALHO */}
       <div style={headerStyle}>
         <div><strong>Sistema:</strong> Sentinel</div>
         <div><strong>Data:</strong> {new Date().toLocaleString("pt-BR")}</div>
         <div><strong>Total:</strong> {sorted.length} ocorrências</div>
       </div>
 
-      {/* 🔍 FILTROS */}
       <div style={filterBar}>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Todos</option>
-          <option value="OPEN">OPEN</option>
-          <option value="IN_PROGRESS">IN_PROGRESS</option>
-          <option value="RESOLVED">RESOLVED</option>
-          <option value="CANCELED">CANCELED</option>
+          <option value="OPEN">Aberta</option>
+          <option value="IN_PROGRESS">Em andamento</option>
+          <option value="RESOLVED">Resolvida</option>
+          <option value="CANCELED">Cancelada</option>
         </select>
 
         <input
@@ -144,7 +161,6 @@ export default function Reports() {
         <button onClick={copyReport}>Copiar</button>
       </div>
 
-      {/* 📊 TABELA */}
       <div id="report-area" style={{ overflowX: "auto" }}>
         <table style={tableStyle}>
           <thead>
@@ -186,8 +202,8 @@ export default function Reports() {
               <tr key={o.id}>
                 <td style={td}>{o.plate}</td>
                 <td style={td}>{o.category}</td>
-                <td style={td}>{o.status}</td>
-                <td style={td}>{o.description || "-"}</td>
+                <td style={td}>{formatStatus(o.status)}</td>
+                <td style={td}>{(o.description || "-").slice(0, 100)}</td>
                 <td style={td}>{formatDate(o.updatedAt)}</td>
               </tr>
             ))}
@@ -198,7 +214,6 @@ export default function Reports() {
   );
 }
 
-// 🔥 ESTILO MELHORADO
 const filterBar = {
   marginBottom: 20,
   display: "flex",
@@ -207,12 +222,14 @@ const filterBar = {
 };
 
 const headerStyle = {
-  marginBottom: 15,
-  padding: 10,
-  background: "#f1f5f9",
-  borderRadius: 6,
+  marginBottom: 20,
+  padding: 16,
+  background: "#0f172a",
+  borderRadius: 10,
   display: "flex",
-  gap: 20,
+  justifyContent: "space-between",
+  color: "white",
+  fontWeight: "600",
 };
 
 const tableStyle = {
@@ -224,12 +241,15 @@ const tableStyle = {
 const th = {
   border: "1px solid #ddd",
   padding: "10px",
-  background: "#e2e8f0",
+  background: "#1e293b",
+  color: "white",
+  minWidth: "140px",
 };
 
 const td = {
   border: "1px solid #ddd",
   padding: "8px",
+  minWidth: "140px",
 };
 
 const inputSmall = {
