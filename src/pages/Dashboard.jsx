@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listOccurrences } from "../services/occurrenceService";
+import StatusBadge from "../components/StatusBadge";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -92,59 +93,6 @@ export default function Dashboard() {
     }
   }
 
-  function getStatusLabel(status) {
-    switch (status) {
-      case "OPEN":
-        return "Aberta";
-      case "RESOLVED":
-        return "Resolvida";
-      case "CANCELED":
-        return "Cancelada";
-      default:
-        return status;
-    }
-  }
-
-  function getStatusBadgeStyle(status) {
-    switch (status) {
-      case "OPEN":
-        return {
-          ...statusBadgeBaseStyle,
-          background: "#fef3c7",
-          color: "#92400e",
-          border: "1px solid #fde68a",
-        };
-      case "IN_PROGRESS":
-        return {
-          ...statusBadgeBaseStyle,
-          background: "#e0f2fe",
-          color: "#0369a1",
-          border: "1px solid #bae6fd",
-        };
-      case "RESOLVED":
-        return {
-          ...statusBadgeBaseStyle,
-          background: "#dcfce7",
-          color: "#166534",
-          border: "1px solid #86efac",
-        };
-      case "CANCELED":
-        return {
-          ...statusBadgeBaseStyle,
-          background: "#ffedd5",
-          color: "#c2410c",
-          border: "1px solid #fdba74",
-        };
-      default:
-        return {
-          ...statusBadgeBaseStyle,
-          background: "#e2e8f0",
-          color: "#0f172a",
-          border: "1px solid #cbd5e1",
-        };
-    }
-  }
-
   function goToStatus(status) {
     navigate(`/occurrences?status=${status}`);
   }
@@ -154,11 +102,16 @@ export default function Dashboard() {
   }
 
   if (loading) {
-    return <div style={{ padding: "8px" }}>Carregando dashboard...</div>;
+    return (
+      <div className="sentinel-loading">
+        <div className="sentinel-spinner" />
+        <span>Carregando dashboard...</span>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div style={pageStyle}>
       <div style={dashboardHeaderStyle}>
         <div>
           <h1 style={pageTitleStyle}>Dashboard</h1>
@@ -176,6 +129,7 @@ export default function Dashboard() {
           value={stats.total}
           subtitle="Todas as ocorrências"
           color="#334155"
+          gradient="linear-gradient(135deg, #334155, #1e293b)"
           onClick={() => navigate("/occurrences")}
         />
 
@@ -184,6 +138,7 @@ export default function Dashboard() {
           value={stats.open}
           subtitle="Precisam de atenção"
           color="#facc15"
+          gradient="linear-gradient(135deg, #facc15, #eab308)"
           onClick={() => goToStatus("OPEN")}
         />
 
@@ -192,6 +147,7 @@ export default function Dashboard() {
           value={stats.resolved}
           subtitle="Finalizadas"
           color="#22c55e"
+          gradient="linear-gradient(135deg, #22c55e, #16a34a)"
           onClick={() => goToStatus("RESOLVED")}
         />
 
@@ -200,6 +156,7 @@ export default function Dashboard() {
           value={stats.canceled}
           subtitle="Encerradas"
           color="#f97316"
+          gradient="linear-gradient(135deg, #f97316, #ea580c)"
           onClick={() => goToStatus("CANCELED")}
         />
       </div>
@@ -236,7 +193,7 @@ export default function Dashboard() {
                   <tr
                     key={occ.id}
                     onClick={() => openOccurrence(occ)}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#e2e8f0")}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#eef2ff")}
                     onMouseLeave={(e) =>
                     (e.currentTarget.style.background =
                       index % 2 === 0 ? "#ffffff" : "#f8fafc")
@@ -247,11 +204,11 @@ export default function Dashboard() {
                     }}
                     title="Abrir ocorrência"
                   >
-                    <td style={tdStyle}>#{occ.id}</td>
                     <td style={tdStyle}>
-                      <span style={getStatusBadgeStyle(occ.status)}>
-                        {getStatusLabel(occ.status)}
-                      </span>
+                      <span style={codeStyle}>#{occ.id}</span>
+                    </td>
+                    <td style={tdStyle}>
+                      <StatusBadge status={occ.status} />
                     </td>
                     <td style={tdStyle}>{occ.categoryName || "-"}</td>
                     <td style={tdStyle}>
@@ -273,7 +230,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, subtitle, color, onClick }) {
+function StatCard({ title, value, subtitle, color, gradient, onClick }) {
   const [hover, setHover] = useState(false);
 
   return (
@@ -285,35 +242,54 @@ function StatCard({ title, value, subtitle, color, onClick }) {
       style={{
         ...statCardStyle,
         ...(hover ? statCardHover : {}),
-        borderTop: `5px solid ${color}`,
       }}
     >
       <div style={statCardTopStyle}>
         <span style={statTitleStyle}>{title}</span>
+        <div
+          style={{
+            width: "10px",
+            height: "10px",
+            borderRadius: "50%",
+            background: gradient,
+            boxShadow: `0 2px 8px ${color}40`,
+          }}
+        />
       </div>
 
       <div style={statValueStyle}>{value}</div>
       <div style={statSubtitleStyle}>{subtitle}</div>
+
+      {/* Accent bar bottom */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: "20px",
+          right: "20px",
+          height: "3px",
+          borderRadius: "3px 3px 0 0",
+          background: gradient,
+          opacity: hover ? 1 : 0.4,
+          transition: "opacity 0.25s ease",
+        }}
+      />
     </button>
   );
 }
 
-const statusBadgeBaseStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "6px 10px",
-  borderRadius: "999px",
-  fontSize: "12px",
-  fontWeight: "800",
-  whiteSpace: "nowrap",
+// ===== ESTILOS =====
+
+const pageStyle = {
+  display: "grid",
+  gap: "20px",
+  animation: "slideUp 0.4s ease both",
 };
 
 const dashboardHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "flex-start",
-  marginBottom: "24px",
 };
 
 const pageTitleStyle = {
@@ -321,7 +297,7 @@ const pageTitleStyle = {
   fontSize: "34px",
   color: "#0f172a",
   fontWeight: "900",
-  letterSpacing: "-0.5px",
+  letterSpacing: "-0.03em",
 };
 
 const pageSubtitleStyle = {
@@ -333,24 +309,26 @@ const pageSubtitleStyle = {
 const statsGridStyle = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-  gap: "18px",
-  marginBottom: "24px",
+  gap: "16px",
 };
 
 const statCardStyle = {
+  position: "relative",
   background: "white",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
-  padding: "20px",
+  padding: "22px 20px 26px",
   textAlign: "left",
   cursor: "pointer",
-  boxShadow: "0 10px 30px rgba(15, 23, 42, 0.08)",
-  transition: "all 0.25s ease",
+  boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)",
+  transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+  overflow: "hidden",
 };
 
 const statCardHover = {
   transform: "translateY(-4px)",
-  boxShadow: "0 20px 40px rgba(15, 23, 42, 0.12)",
+  boxShadow: "0 16px 40px rgba(15, 23, 42, 0.1)",
+  borderColor: "#cbd5e1",
 };
 
 const statCardTopStyle = {
@@ -362,44 +340,48 @@ const statCardTopStyle = {
 const statTitleStyle = {
   color: "#475569",
   fontWeight: "700",
-  fontSize: "14px",
+  fontSize: "13px",
+  letterSpacing: "0.01em",
 };
 
 const statValueStyle = {
-  marginTop: "14px",
-  fontSize: "32px",
-  fontWeight: "800",
+  marginTop: "12px",
+  fontSize: "34px",
+  fontWeight: "900",
   color: "#0f172a",
+  letterSpacing: "-0.02em",
 };
 
 const statSubtitleStyle = {
-  marginTop: "8px",
-  color: "#64748b",
+  marginTop: "6px",
+  color: "#94a3b8",
   fontSize: "13px",
+  fontWeight: "500",
 };
 
 const sectionCardStyle = {
   background: "white",
   border: "1px solid #e2e8f0",
   borderRadius: "18px",
-  boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.05)",
   overflow: "hidden",
 };
 
 const sectionHeaderStyle = {
-  padding: "22px 22px 12px",
+  padding: "22px 24px 14px",
 };
 
 const sectionTitleStyle = {
   margin: 0,
-  fontSize: "22px",
+  fontSize: "20px",
   color: "#0f172a",
   fontWeight: "800",
+  letterSpacing: "-0.01em",
 };
 
 const sectionSubtitleStyle = {
-  margin: "8px 0 0",
-  color: "#64748b",
+  margin: "6px 0 0",
+  color: "#94a3b8",
   fontSize: "14px",
 };
 
@@ -414,16 +396,18 @@ const tableStyle = {
 
 const thStyle = {
   textAlign: "left",
-  padding: "14px 18px",
-  background: "#e2e8f0",
-  borderBottom: "1px solid #cbd5e1",
-  color: "#334155",
-  fontSize: "13px",
+  padding: "12px 18px",
+  background: "#f1f5f9",
+  borderBottom: "1px solid #e2e8f0",
+  color: "#475569",
+  fontSize: "12px",
   fontWeight: "800",
+  letterSpacing: "0.03em",
+  textTransform: "uppercase",
 };
 
 const tdStyle = {
-  padding: "16px 18px",
+  padding: "14px 18px",
   borderBottom: "1px solid #f1f5f9",
   color: "#0f172a",
   fontSize: "14px",
@@ -434,9 +418,15 @@ const clickableRowStyle = {
   transition: "all 0.15s ease",
 };
 
+const codeStyle = {
+  fontWeight: "800",
+  color: "#3b82f6",
+  fontSize: "13px",
+};
+
 const platePillStyle = {
   display: "inline-block",
-  padding: "6px 12px",
+  padding: "5px 10px",
   borderRadius: "999px",
   background: "#f1f5f9",
   border: "1px solid #e2e8f0",
@@ -446,8 +436,7 @@ const platePillStyle = {
 };
 
 const errorStyle = {
-  marginBottom: "16px",
-  padding: "12px",
+  padding: "12px 16px",
   borderRadius: "12px",
   background: "#fee2e2",
   color: "#991b1b",
@@ -455,6 +444,7 @@ const errorStyle = {
 };
 
 const emptyStyle = {
-  padding: "24px",
-  color: "#64748b",
+  padding: "32px 24px",
+  color: "#94a3b8",
+  fontSize: "14px",
 };

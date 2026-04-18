@@ -21,8 +21,11 @@ const layoutStyle = {
 const contentWrapperStyle = {
   flex: 1,
   minWidth: 0,
+  overflowY: "auto",
+  maxHeight: "100vh",
 };
 
 const mainStyle = {
-  padding: "28px",
+  padding: "32px",
+  animation: "fadeIn 0.3s ease both",
 };

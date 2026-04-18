@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import logo from "../assets/logo.png";
+import { AuthContext } from "../context/AuthContext";
 
 export default function Reports() {
+  const { user } = useContext(AuthContext);
+
   const [data, setData] = useState([]);
 
   const [status, setStatus] = useState("");
@@ -26,6 +28,8 @@ export default function Reports() {
     key: "updatedAt",
     direction: "desc",
   });
+
+  const [copyFeedback, setCopyFeedback] = useState(false);
 
   useEffect(() => {
     load();
@@ -54,6 +58,16 @@ export default function Reports() {
     }
   }
 
+  function getStatusStyle(status) {
+    switch (status) {
+      case "OPEN": return { bg: "#fef3c7", color: "#92400e", border: "#fde68a" };
+      case "IN_PROGRESS": return { bg: "#e0f2fe", color: "#0369a1", border: "#bae6fd" };
+      case "RESOLVED": return { bg: "#dcfce7", color: "#166534", border: "#86efac" };
+      case "CANCELED": return { bg: "#ffedd5", color: "#c2410c", border: "#fdba74" };
+      default: return { bg: "#e2e8f0", color: "#0f172a", border: "#cbd5e1" };
+    }
+  }
+
   const filtered = data.filter((o) => {
     const date = new Date(o.updatedAt);
 
@@ -79,6 +93,18 @@ export default function Reports() {
     return 0;
   });
 
+  function handleSort(key) {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  }
+
+  function getSortIndicator(key) {
+    if (sortConfig.key !== key) return " ↕";
+    return sortConfig.direction === "asc" ? " ↑" : " ↓";
+  }
+
   function formatDate(date) {
     if (!date) return "-";
     return new Date(date).toLocaleString("pt-BR");
@@ -87,112 +113,173 @@ export default function Reports() {
   async function exportPDF() {
     const pdf = new jsPDF("landscape");
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 14;
 
-    let y = 12;
-
+    // ── Carrega logo ──
     const logoImg = new Image();
     logoImg.src = logo;
-
     await new Promise((resolve) => {
       logoImg.onload = resolve;
     });
 
-    pdf.addImage(logoImg, "PNG", 10, 5, 30, 15);
-    // 🧠 CABEÇALHO BONITO
-    pdf.setFontSize(20);
-    pdf.setTextColor(15, 23, 42);
-    pdf.text("RELATÓRIO DE OCORRÊNCIAS", 10, y);
+    // ── Cabeçalho ──
+    function drawHeader(pdf) {
+      pdf.addImage(logoImg, "PNG", margin, 8, 28, 14);
 
-    y += 6;
+      pdf.setFontSize(18);
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFont(undefined, "bold");
+      pdf.text("SENTINEL", margin + 32, 15);
 
-    pdf.setFontSize(12);
-    pdf.setTextColor(100);
-    pdf.text("Sistema Sentinel", 10, y);
+      pdf.setFontSize(10);
+      pdf.setTextColor(100);
+      pdf.setFont(undefined, "normal");
+      pdf.text("Relatório de Ocorrências", margin + 32, 21);
 
-    y += 6;
-
-    pdf.setFontSize(10);
-    pdf.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, y);
-
-    y += 5;
-
-    pdf.text(`Emitido por: Operador`, 10, y);
-
-    y += 8;
-
-    // 🔥 LINHA DIVISÓRIA
-    pdf.setDrawColor(180);
-    pdf.line(10, y, pageWidth - 10, y);
-
-    y += 8;
-
-    // 📊 CABEÇALHO DA TABELA
-    pdf.setFontSize(11);
-    pdf.setFont(undefined, "bold");
-    pdf.setTextColor(0);
-
-    pdf.text("Placa", 10, y);
-    pdf.text("Categoria", 55, y);
-    pdf.text("Status", 120, y);
-    pdf.text("Observações", 165, y);
-    pdf.text("Atualizado", 250, y);
-
-    pdf.setFont(undefined, "normal");
-
-    y += 5;
-
-    pdf.setDrawColor(200);
-    pdf.line(10, y, pageWidth - 10, y);
-
-    y += 6;
-
-    // 📊 LINHAS
-    sorted.forEach((o) => {
-      if (y > 185) {
-        pdf.addPage();
-        y = 12;
-      }
-
-      const status = formatStatus(o.status);
-      const desc = (o.description || "-").slice(0, 90);
-
+      // Info direita
       pdf.setFontSize(9);
-      pdf.setTextColor(20);
+      pdf.setTextColor(80);
+      const now = new Date();
+      const dateStr = now.toLocaleString("pt-BR");
+      const userName = user?.nome || "Operador";
 
-      pdf.text(o.plate || "-", 10, y);
-      pdf.text(o.category || "-", 55, y);
-      pdf.text(status, 120, y);
-      pdf.text(desc, 165, y);
-      pdf.text(formatDate(o.updatedAt), 250, y);
+      pdf.text(`Emitido em: ${dateStr}`, pageWidth - margin, 12, { align: "right" });
+      pdf.text(`Responsável: ${userName}`, pageWidth - margin, 18, { align: "right" });
+      pdf.text(`Total: ${sorted.length} ocorrências`, pageWidth - margin, 24, { align: "right" });
 
-      y += 6;
+      // Linha
+      pdf.setDrawColor(200);
+      pdf.line(margin, 28, pageWidth - margin, 28);
+    }
+
+    drawHeader(pdf);
+
+    // ── Tabela ──
+    const colWidths = [35, 55, 30, 100, 48]; // Placa, Categoria, Status, Obs, Data
+    const colLabels = ["Placa", "Categoria", "Status", "Observações", "Atualizado"];
+    let y = 34;
+
+    // Cabeçalho tabela
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, "bold");
+    pdf.setTextColor(255);
+    pdf.setFillColor(30, 41, 59);
+    pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
+
+    let x = margin + 2;
+    colLabels.forEach((label, i) => {
+      pdf.text(label, x, y);
+      x += colWidths[i];
     });
 
-    // 🔻 RODAPÉ BONITO
-    const totalPages = pdf.getNumberOfPages();
+    pdf.setFont(undefined, "normal");
+    y += 8;
 
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
+    // Linhas de dados
+    sorted.forEach((o, idx) => {
+      if (y > pageHeight - 20) {
+        // Rodapé antes da nova página
+        drawFooter(pdf, pageWidth, pageHeight, margin);
+        pdf.addPage();
+        drawHeader(pdf);
+        y = 34;
 
-      pdf.setFontSize(9);
-      pdf.setTextColor(120);
+        // Re-draw header da tabela
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, "bold");
+        pdf.setTextColor(255);
+        pdf.setFillColor(30, 41, 59);
+        pdf.rect(margin, y - 4, pageWidth - margin * 2, 8, "F");
 
-      pdf.line(10, 195, pageWidth - 10, 195);
+        let xx = margin + 2;
+        colLabels.forEach((label, i) => {
+          pdf.text(label, xx, y);
+          xx += colWidths[i];
+        });
 
+        pdf.setFont(undefined, "normal");
+        y += 8;
+      }
+
+      // Zebra striping
+      if (idx % 2 === 0) {
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(margin, y - 4, pageWidth - margin * 2, 7, "F");
+      }
+
+      const statusText = formatStatus(o.status);
+      const desc = (o.description || "-").slice(0, 70);
+      const dateText = formatDate(o.updatedAt);
+
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(30);
+
+      x = margin + 2;
+      pdf.text(o.plate || "-", x, y);
+      x += colWidths[0];
+      pdf.text(o.category || "-", x, y);
+      x += colWidths[1];
+      pdf.text(statusText, x, y);
+      x += colWidths[2];
+      pdf.text(desc, x, y);
+      x += colWidths[3];
+      pdf.text(dateText, x, y);
+
+      y += 7;
+    });
+
+    // ── Rodapé em todas as páginas ──
+    function drawFooter(pdf, pw, ph, m) {
+      pdf.setDrawColor(200);
+      pdf.line(m, ph - 12, pw - m, ph - 12);
+      pdf.setFontSize(8);
+      pdf.setTextColor(140);
       pdf.text(
         `Sentinel • Relatório automático • ${new Date().getFullYear()}`,
-        10,
-        200
+        m,
+        ph - 7
       );
-
       pdf.text(
-        `Página ${i} de ${totalPages}`,
-        pageWidth - 40,
-        200
+        `Página ${pdf.getCurrentPageInfo().pageNumber}`,
+        pw - m,
+        ph - 7,
+        { align: "right" }
       );
     }
 
-    pdf.save("relatorio-sentinel.pdf");
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+
+      pdf.setDrawColor(200);
+      pdf.line(margin, ph - 12, pw - margin, ph - 12);
+      pdf.setFontSize(8);
+      pdf.setTextColor(140);
+      pdf.text(
+        `Sentinel • Relatório automático • ${new Date().getFullYear()}`,
+        margin,
+        ph - 7
+      );
+      pdf.text(
+        `Página ${i} de ${totalPages}`,
+        pw - margin,
+        ph - 7,
+        { align: "right" }
+      );
+    }
+
+    // ── Nome do arquivo: DDMMYYNome.pdf ──
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yy = String(now.getFullYear()).slice(-2);
+    const firstName = (user?.nome || "Operador").split(" ")[0];
+    const filename = `${dd}${mm}${yy}${firstName}.pdf`;
+
+    pdf.save(filename);
   }
 
   function copyReport() {
@@ -208,149 +295,437 @@ Atualizado: ${formatDate(o.updatedAt)}
       )
       .join("\n");
 
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    });
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ marginBottom: 10 }}>Relatórios</h1>
-
-      <div style={headerStyle}>
-        <div><strong>Sistema:</strong> Sentinel</div>
-        <div><strong>Data:</strong> {new Date().toLocaleString("pt-BR")}</div>
-        <div><strong>Total:</strong> {sorted.length} ocorrências</div>
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={pageHeaderStyle}>
+        <div>
+          <h1 style={pageTitleStyle}>Relatórios</h1>
+          <p style={pageSubtitleStyle}>
+            Visualize, filtre e exporte ocorrências em formato profissional.
+          </p>
+        </div>
       </div>
 
-      <div style={filterBar}>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">Todos</option>
-          <option value="OPEN">Aberta</option>
-          <option value="IN_PROGRESS">Em andamento</option>
-          <option value="RESOLVED">Resolvida</option>
-          <option value="CANCELED">Cancelada</option>
-        </select>
-
-        <input
-          placeholder="Placa"
-          value={plate}
-          onChange={(e) => setPlate(e.target.value)}
-        />
-
-        <input
-          type="datetime-local"
-          value={dateFilter.start}
-          onChange={(e) =>
-            setDateFilter({ ...dateFilter, start: e.target.value })
-          }
-        />
-
-        <input
-          type="datetime-local"
-          value={dateFilter.end}
-          onChange={(e) =>
-            setDateFilter({ ...dateFilter, end: e.target.value })
-          }
-        />
-
-        <button onClick={load}>Filtrar</button>
-        <button onClick={exportPDF}>PDF</button>
-        <button onClick={copyReport}>Copiar</button>
+      {/* Info Bar */}
+      <div style={infoBarStyle}>
+        <div style={infoItemStyle}>
+          <span style={infoLabelStyle}>Sistema</span>
+          <span style={infoValueStyle}>Sentinel</span>
+        </div>
+        <div style={infoItemStyle}>
+          <span style={infoLabelStyle}>Data</span>
+          <span style={infoValueStyle}>{new Date().toLocaleDateString("pt-BR")}</span>
+        </div>
+        <div style={infoItemStyle}>
+          <span style={infoLabelStyle}>Responsável</span>
+          <span style={infoValueStyle}>{user?.nome || "Operador"}</span>
+        </div>
+        <div style={infoItemStyle}>
+          <span style={infoLabelStyle}>Total</span>
+          <span style={{ ...infoValueStyle, color: "#3b82f6", fontWeight: "800" }}>
+            {sorted.length}
+          </span>
+        </div>
       </div>
 
-      <div id="report-area" style={{ overflowX: "auto" }}>
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={th}>
-                Placa
-                <input style={inputSmall} onChange={(e) =>
-                  setColumnFilter({ ...columnFilter, plate: e.target.value })
-                } />
-              </th>
+      {/* Filters */}
+      <div style={filterCardStyle}>
+        <div style={filterTitleRowStyle}>
+          <h3 style={filterTitleStyle}>Filtros</h3>
 
-              <th style={th}>
-                Categoria
-                <input style={inputSmall} onChange={(e) =>
-                  setColumnFilter({ ...columnFilter, category: e.target.value })
-                } />
-              </th>
+          <div style={actionButtonsStyle}>
+            <button onClick={load} style={filterButtonStyle}>
+              🔍 Filtrar
+            </button>
+            <button onClick={exportPDF} style={pdfButtonStyle}>
+              📄 Exportar PDF
+            </button>
+            <button onClick={copyReport} style={copyButtonStyle}>
+              {copyFeedback ? "✅ Copiado!" : "📋 Copiar"}
+            </button>
+          </div>
+        </div>
 
-              <th style={th}>
-                Status
-                <input style={inputSmall} onChange={(e) =>
-                  setColumnFilter({ ...columnFilter, status: e.target.value })
-                } />
-              </th>
+        <div style={filterGridStyle}>
+          <div style={filterFieldStyle}>
+            <label style={filterLabelStyle}>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">Todos</option>
+              <option value="OPEN">Aberta</option>
+              <option value="IN_PROGRESS">Em andamento</option>
+              <option value="RESOLVED">Resolvida</option>
+              <option value="CANCELED">Cancelada</option>
+            </select>
+          </div>
 
-              <th style={th}>
-                Observações
-                <input style={inputSmall} onChange={(e) =>
-                  setColumnFilter({ ...columnFilter, description: e.target.value })
-                } />
-              </th>
+          <div style={filterFieldStyle}>
+            <label style={filterLabelStyle}>Placa</label>
+            <input
+              placeholder="Ex: ABC1234"
+              value={plate}
+              onChange={(e) => setPlate(e.target.value)}
+            />
+          </div>
 
-              <th style={th}>Atualizado</th>
-            </tr>
-          </thead>
+          <div style={filterFieldStyle}>
+            <label style={filterLabelStyle}>Data início</label>
+            <input
+              type="datetime-local"
+              value={dateFilter.start}
+              onChange={(e) =>
+                setDateFilter({ ...dateFilter, start: e.target.value })
+              }
+            />
+          </div>
 
-          <tbody>
-            {sorted.map((o) => (
-              <tr key={o.id}>
-                <td style={td}>{o.plate}</td>
-                <td style={td}>{o.category}</td>
-                <td style={td}>{formatStatus(o.status)}</td>
-                <td style={td}>{(o.description || "-").slice(0, 100)}</td>
-                <td style={td}>{formatDate(o.updatedAt)}</td>
+          <div style={filterFieldStyle}>
+            <label style={filterLabelStyle}>Data fim</label>
+            <input
+              type="datetime-local"
+              value={dateFilter.end}
+              onChange={(e) =>
+                setDateFilter({ ...dateFilter, end: e.target.value })
+              }
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div style={tableCardStyle}>
+        <div style={tableWrapperStyle}>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle} onClick={() => handleSort("plate")}>
+                  Placa{getSortIndicator("plate")}
+                  <input
+                    style={thInputStyle}
+                    placeholder="Filtrar..."
+                    onChange={(e) =>
+                      setColumnFilter({ ...columnFilter, plate: e.target.value })
+                    }
+                  />
+                </th>
+
+                <th style={thStyle} onClick={() => handleSort("category")}>
+                  Categoria{getSortIndicator("category")}
+                  <input
+                    style={thInputStyle}
+                    placeholder="Filtrar..."
+                    onChange={(e) =>
+                      setColumnFilter({ ...columnFilter, category: e.target.value })
+                    }
+                  />
+                </th>
+
+                <th style={thStyle} onClick={() => handleSort("status")}>
+                  Status{getSortIndicator("status")}
+                  <input
+                    style={thInputStyle}
+                    placeholder="Filtrar..."
+                    onChange={(e) =>
+                      setColumnFilter({ ...columnFilter, status: e.target.value })
+                    }
+                  />
+                </th>
+
+                <th style={thStyle}>
+                  Observações
+                  <input
+                    style={thInputStyle}
+                    placeholder="Filtrar..."
+                    onChange={(e) =>
+                      setColumnFilter({ ...columnFilter, description: e.target.value })
+                    }
+                  />
+                </th>
+
+                <th style={thStyle} onClick={() => handleSort("updatedAt")}>
+                  Atualizado{getSortIndicator("updatedAt")}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {sorted.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={emptyTdStyle}>
+                    Nenhuma ocorrência encontrada.
+                  </td>
+                </tr>
+              ) : (
+                sorted.map((o, idx) => {
+                  const st = getStatusStyle(o.status);
+                  return (
+                    <tr
+                      key={o.id}
+                      style={{
+                        background: idx % 2 === 0 ? "#ffffff" : "#f8fafc",
+                        transition: "background 0.15s ease",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "#eef2ff")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background =
+                          idx % 2 === 0 ? "#ffffff" : "#f8fafc")
+                      }
+                    >
+                      <td style={tdStyle}>
+                        <span style={platePillStyle}>{o.plate || "-"}</span>
+                      </td>
+                      <td style={tdStyle}>{o.category || "-"}</td>
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                            background: st.bg,
+                            color: st.color,
+                            border: `1px solid ${st.border}`,
+                          }}
+                        >
+                          {formatStatus(o.status)}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, maxWidth: "300px" }}>
+                        {(o.description || "-").slice(0, 100)}
+                      </td>
+                      <td style={tdStyle}>{formatDate(o.updatedAt)}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
 
-const filterBar = {
-  marginBottom: 20,
+// ===== ESTILOS =====
+
+const pageStyle = {
+  display: "grid",
+  gap: "20px",
+  animation: "slideUp 0.4s ease both",
+};
+
+const pageHeaderStyle = {
   display: "flex",
-  gap: 10,
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+};
+
+const pageTitleStyle = {
+  margin: 0,
+  fontSize: "30px",
+  color: "#0f172a",
+  fontWeight: "900",
+  letterSpacing: "-0.02em",
+};
+
+const pageSubtitleStyle = {
+  margin: "6px 0 0",
+  color: "#64748b",
+  fontSize: "15px",
+};
+
+const infoBarStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+  gap: "12px",
+};
+
+const infoItemStyle = {
+  background: "white",
+  borderRadius: "14px",
+  padding: "16px 18px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 2px 8px rgba(15,23,42,0.03)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+};
+
+const infoLabelStyle = {
+  fontSize: "11px",
+  fontWeight: "700",
+  color: "#94a3b8",
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+};
+
+const infoValueStyle = {
+  fontSize: "16px",
+  fontWeight: "700",
+  color: "#0f172a",
+};
+
+const filterCardStyle = {
+  background: "white",
+  borderRadius: "16px",
+  padding: "20px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 4px 16px rgba(15,23,42,0.04)",
+};
+
+const filterTitleRowStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "16px",
+  marginBottom: "16px",
   flexWrap: "wrap",
 };
 
-const headerStyle = {
-  marginBottom: 20,
-  padding: 16,
-  background: "#0f172a",
-  borderRadius: 10,
+const filterTitleStyle = {
+  margin: 0,
+  fontSize: "16px",
+  fontWeight: "800",
+  color: "#0f172a",
+};
+
+const actionButtonsStyle = {
   display: "flex",
-  justifyContent: "space-between",
+  gap: "8px",
+  flexWrap: "wrap",
+};
+
+const filterGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "12px",
+};
+
+const filterFieldStyle = {
+  display: "grid",
+  gap: "5px",
+};
+
+const filterLabelStyle = {
+  fontSize: "12px",
+  fontWeight: "700",
+  color: "#475569",
+};
+
+const filterButtonStyle = {
+  background: "#e2e8f0",
+  color: "#1e293b",
+  padding: "9px 16px",
+  borderRadius: "10px",
+  fontWeight: "700",
+  fontSize: "13px",
+  border: "none",
+  cursor: "pointer",
+};
+
+const pdfButtonStyle = {
+  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
   color: "white",
-  fontWeight: "600",
+  padding: "9px 16px",
+  borderRadius: "10px",
+  fontWeight: "700",
+  fontSize: "13px",
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "0 4px 12px rgba(37,99,235,0.25)",
+};
+
+const copyButtonStyle = {
+  background: "white",
+  color: "#334155",
+  padding: "9px 16px",
+  borderRadius: "10px",
+  fontWeight: "700",
+  fontSize: "13px",
+  border: "1.5px solid #cbd5e1",
+  cursor: "pointer",
+  minWidth: "120px",
+  transition: "all 0.2s ease",
+};
+
+const tableCardStyle = {
+  background: "white",
+  borderRadius: "16px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 8px 24px rgba(15,23,42,0.05)",
+  overflow: "hidden",
+};
+
+const tableWrapperStyle = {
+  overflowX: "auto",
 };
 
 const tableStyle = {
   width: "100%",
   borderCollapse: "collapse",
-  background: "white",
+  minWidth: "800px",
 };
 
-const th = {
-  border: "1px solid #ddd",
-  padding: "10px",
-  background: "#1e293b",
+const thStyle = {
+  textAlign: "left",
+  padding: "14px 16px",
+  background: "#0f172a",
   color: "white",
-  minWidth: "140px",
-};
-
-const td = {
-  border: "1px solid #ddd",
-  padding: "8px",
-  minWidth: "140px",
-};
-
-const inputSmall = {
-  width: "90%",
-  padding: "4px",
   fontSize: "12px",
-  marginTop: "4px",
+  fontWeight: "700",
+  letterSpacing: "0.03em",
+  cursor: "pointer",
+  userSelect: "none",
+  minWidth: "120px",
+  verticalAlign: "top",
+};
+
+const thInputStyle = {
+  display: "block",
+  width: "100%",
+  padding: "5px 8px",
+  marginTop: "6px",
+  fontSize: "11px",
+  borderRadius: "6px",
+  border: "1px solid rgba(255,255,255,0.15)",
+  background: "rgba(255,255,255,0.08)",
+  color: "white",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const tdStyle = {
+  padding: "12px 16px",
+  borderBottom: "1px solid #f1f5f9",
+  color: "#0f172a",
+  fontSize: "14px",
+  verticalAlign: "middle",
+};
+
+const emptyTdStyle = {
+  padding: "40px 16px",
+  textAlign: "center",
+  color: "#94a3b8",
+  fontSize: "14px",
+};
+
+const platePillStyle = {
+  display: "inline-block",
+  padding: "5px 10px",
+  borderRadius: "999px",
+  background: "#f1f5f9",
+  border: "1px solid #e2e8f0",
+  fontWeight: "800",
+  letterSpacing: "0.04em",
+  fontSize: "13px",
 };

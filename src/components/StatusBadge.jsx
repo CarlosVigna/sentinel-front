@@ -1,182 +1,68 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { mockOccurrences } from "../mocks/occurrences";
+/**
+ * StatusBadge — Componente puro de exibição de status.
+ *
+ * Uso: <StatusBadge status="OPEN" />
+ */
 
-export default function Occurrences() {
+const STATUS_MAP = {
+  OPEN: {
+    label: "Aberta",
+    bg: "#fef3c7",
+    color: "#92400e",
+    border: "#fde68a",
+  },
+  IN_PROGRESS: {
+    label: "Em andamento",
+    bg: "#e0f2fe",
+    color: "#0369a1",
+    border: "#bae6fd",
+  },
+  RESOLVED: {
+    label: "Resolvida",
+    bg: "#dcfce7",
+    color: "#166534",
+    border: "#86efac",
+  },
+  CANCELED: {
+    label: "Cancelada",
+    bg: "#ffedd5",
+    color: "#c2410c",
+    border: "#fdba74",
+  },
+};
 
-  const navigate = useNavigate();
+const DEFAULT_CONFIG = {
+  label: "Desconhecido",
+  bg: "#e2e8f0",
+  color: "#0f172a",
+  border: "#cbd5e1",
+};
 
-  const [occurrences, setOccurrences] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-
-  const [statusFilter, setStatusFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [plateFilter, setPlateFilter] = useState("");
-
-  useEffect(() => {
-    setOccurrences(mockOccurrences);
-    setFiltered(mockOccurrences);
-  }, []);
-
-  useEffect(() => {
-
-    let data = [...occurrences];
-
-    if (statusFilter) {
-      data = data.filter(o => o.status === statusFilter);
-    }
-
-    if (categoryFilter) {
-      data = data.filter(o => o.categoryName === categoryFilter);
-    }
-
-    if (plateFilter) {
-      data = data.filter(o =>
-        o.plate.toLowerCase().includes(plateFilter.toLowerCase())
-      );
-    }
-
-    setFiltered(data);
-
-  }, [statusFilter, categoryFilter, plateFilter, occurrences]);
-
-  function resolveOccurrence(e, id) {
-
-    e.stopPropagation();
-
-    const updated = occurrences.map((occ) =>
-      occ.id === id ? { ...occ, status: "RESOLVED" } : occ
-    );
-
-    setOccurrences(updated);
-  }
-
-  function cancelOccurrence(e, id) {
-
-    e.stopPropagation();
-
-    const updated = occurrences.map((occ) =>
-      occ.id === id ? { ...occ, status: "CANCELED" } : occ
-    );
-
-    setOccurrences(updated);
-  }
+export default function StatusBadge({ status }) {
+  const config = STATUS_MAP[status] || DEFAULT_CONFIG;
 
   return (
-    <div style={{ padding: "30px" }}>
-
-      <h1>Ocorrências</h1>
-
-      <Link to="/occurrences/new">
-        <button>Criar Ocorrência</button>
-      </Link>
-
-      {/* FILTROS */}
-
-      <div style={{
-        marginTop: "20px",
-        marginBottom: "20px",
-        display: "flex",
-        gap: "10px"
-      }}>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">Todos Status</option>
-          <option value="OPEN">OPEN</option>
-          <option value="IN_PROGRESS">IN_PROGRESS</option>
-          <option value="RESOLVED">RESOLVED</option>
-          <option value="CANCELED">CANCELED</option>
-        </select>
-
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="">Todas Categorias</option>
-          <option value="DESENGATE">DESENGATE</option>
-          <option value="PARADA">PARADA</option>
-          <option value="DESVIO">DESVIO</option>
-        </select>
-
-        <input
-          placeholder="Buscar placa"
-          value={plateFilter}
-          onChange={(e) => setPlateFilter(e.target.value)}
-        />
-
-      </div>
-
-      {/* TABELA */}
-
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ width: "100%" }}
-      >
-
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Status</th>
-            <th>Categoria</th>
-            <th>Placa</th>
-            <th>Título</th>
-            <th>Criado em</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          {filtered.map((occ) => (
-
-            <tr
-              key={occ.id}
-              onClick={() => navigate(`/occurrences/${occ.id}`)}
-              style={{ cursor: "pointer" }}
-            >
-
-              <td>{occ.id}</td>
-              <td>{occ.status}</td>
-              <td>{occ.categoryName}</td>
-              <td>{occ.plate}</td>
-              <td>{occ.title}</td>
-              <td>{occ.createdAt}</td>
-
-              <td>
-
-                {occ.status !== "RESOLVED" && occ.status !== "CANCELED" ? (
-                  <>
-                    <button
-                      onClick={(e) => resolveOccurrence(e, occ.id)}
-                      style={{ marginRight: "5px" }}
-                    >
-                      Resolver
-                    </button>
-
-                    <button
-                      onClick={(e) => cancelOccurrence(e, occ.id)}
-                    >
-                      Cancelar
-                    </button>
-                  </>
-                ) : (
-                  <span>-</span>
-                )}
-
-              </td>
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
-
-    </div>
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "5px 12px",
+        borderRadius: "999px",
+        fontSize: "12px",
+        fontWeight: "700",
+        letterSpacing: "0.02em",
+        whiteSpace: "nowrap",
+        background: config.bg,
+        color: config.color,
+        border: `1px solid ${config.border}`,
+        transition: "all 0.2s ease",
+      }}
+    >
+      {config.label}
+    </span>
   );
 }
+
+// Export the mapping so other components can use it
+export { STATUS_MAP, DEFAULT_CONFIG };

@@ -9,8 +9,9 @@ export default function ProtectedRoute({ children, roles }) {
   // ⏳ enquanto valida token / sessão
   if (loadingAuth) {
     return (
-      <div style={{ padding: "30px" }}>
-        Carregando...
+      <div className="sentinel-loading">
+        <div className="sentinel-spinner" />
+        <span>Verificando acesso...</span>
       </div>
     );
   }
