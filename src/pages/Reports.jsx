@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
 export default function Reports() {
@@ -18,6 +18,7 @@ export default function Reports() {
     plate: "",
     category: "",
     status: "",
+    description: "",
   });
 
   const [sortConfig, setSortConfig] = useState({
@@ -42,7 +43,6 @@ export default function Reports() {
     setData(res);
   }
 
-  // 🔥 FILTROS
   const filtered = data.filter((o) => {
     const date = new Date(o.updatedAt);
 
@@ -51,11 +51,11 @@ export default function Reports() {
       (!dateFilter.end || date <= new Date(dateFilter.end)) &&
       (o.plate || "").toLowerCase().includes(columnFilter.plate.toLowerCase()) &&
       (o.category || "").toLowerCase().includes(columnFilter.category.toLowerCase()) &&
-      (o.status || "").toLowerCase().includes(columnFilter.status.toLowerCase())
+      (o.status || "").toLowerCase().includes(columnFilter.status.toLowerCase()) &&
+      (o.description || "").toLowerCase().includes(columnFilter.description.toLowerCase())
     );
   });
 
-  // 🔥 SORT
   const sorted = [...filtered].sort((a, b) => {
     const aVal = a[sortConfig.key];
     const bVal = b[sortConfig.key];
@@ -70,29 +70,26 @@ export default function Reports() {
 
   function formatDate(date) {
     if (!date) return "-";
-    return new Date(date).toLocaleString();
+    return new Date(date).toLocaleString("pt-BR");
   }
 
-  // 🔥 PDF
+  // 🔥 PDF HORIZONTAL
   async function exportPDF() {
     const element = document.getElementById("report-area");
 
     const canvas = await html2canvas(element);
     const img = canvas.toDataURL("image/png");
 
-    const pdf = new jsPDF();
-    pdf.addImage(img, "PNG", 10, 10, 190, 0);
+    const pdf = new jsPDF("landscape"); // 👈 AQUI
+    pdf.addImage(img, "PNG", 10, 10, 270, 0);
     pdf.save("relatorio.pdf");
   }
 
-  // 🔥 COPIAR
   function copyReport() {
     const text = sorted
       .map(
         (o) =>
-          `${o.plate} | ${o.category} | ${o.status} | ${formatDate(
-            o.updatedAt
-          )}`
+          `${o.plate} | ${o.category} | ${o.status} | ${o.description || ""} | ${formatDate(o.updatedAt)}`
       )
       .join("\n");
 
@@ -101,12 +98,19 @@ export default function Reports() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Relatórios</h1>
+      <h1 style={{ marginBottom: 10 }}>Relatórios</h1>
 
-      {/* 🔍 FILTROS SUPERIORES */}
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+      {/* 🔥 CABEÇALHO */}
+      <div style={headerStyle}>
+        <div><strong>Sistema:</strong> Sentinel</div>
+        <div><strong>Data:</strong> {new Date().toLocaleString("pt-BR")}</div>
+        <div><strong>Total:</strong> {sorted.length} ocorrências</div>
+      </div>
+
+      {/* 🔍 FILTROS */}
+      <div style={filterBar}>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="">Todos Status</option>
+          <option value="">Todos</option>
           <option value="OPEN">OPEN</option>
           <option value="IN_PROGRESS">IN_PROGRESS</option>
           <option value="RESOLVED">RESOLVED</option>
@@ -142,47 +146,38 @@ export default function Reports() {
 
       {/* 📊 TABELA */}
       <div id="report-area" style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", background: "white" }}>
+        <table style={tableStyle}>
           <thead>
             <tr>
               <th style={th}>
                 Placa
-                <input
-                  onChange={(e) =>
-                    setColumnFilter({ ...columnFilter, plate: e.target.value })
-                  }
-                />
+                <input style={inputSmall} onChange={(e) =>
+                  setColumnFilter({ ...columnFilter, plate: e.target.value })
+                }/>
               </th>
 
               <th style={th}>
                 Categoria
-                <input
-                  onChange={(e) =>
-                    setColumnFilter({ ...columnFilter, category: e.target.value })
-                  }
-                />
+                <input style={inputSmall} onChange={(e) =>
+                  setColumnFilter({ ...columnFilter, category: e.target.value })
+                }/>
               </th>
 
               <th style={th}>
                 Status
-                <input
-                  onChange={(e) =>
-                    setColumnFilter({ ...columnFilter, status: e.target.value })
-                  }
-                />
+                <input style={inputSmall} onChange={(e) =>
+                  setColumnFilter({ ...columnFilter, status: e.target.value })
+                }/>
               </th>
 
-              <th
-                style={th}
-                onClick={() =>
-                  setSortConfig((prev) => ({
-                    key: "updatedAt",
-                    direction: prev.direction === "asc" ? "desc" : "asc",
-                  }))
-                }
-              >
-                Atualizado ⬍
+              <th style={th}>
+                Observações
+                <input style={inputSmall} onChange={(e) =>
+                  setColumnFilter({ ...columnFilter, description: e.target.value })
+                }/>
               </th>
+
+              <th style={th}>Atualizado</th>
             </tr>
           </thead>
 
@@ -192,6 +187,7 @@ export default function Reports() {
                 <td style={td}>{o.plate}</td>
                 <td style={td}>{o.category}</td>
                 <td style={td}>{o.status}</td>
+                <td style={td}>{o.description || "-"}</td>
                 <td style={td}>{formatDate(o.updatedAt)}</td>
               </tr>
             ))}
@@ -202,13 +198,43 @@ export default function Reports() {
   );
 }
 
+// 🔥 ESTILO MELHORADO
+const filterBar = {
+  marginBottom: 20,
+  display: "flex",
+  gap: 10,
+  flexWrap: "wrap",
+};
+
+const headerStyle = {
+  marginBottom: 15,
+  padding: 10,
+  background: "#f1f5f9",
+  borderRadius: 6,
+  display: "flex",
+  gap: 20,
+};
+
+const tableStyle = {
+  width: "100%",
+  borderCollapse: "collapse",
+  background: "white",
+};
+
 const th = {
   border: "1px solid #ddd",
   padding: "10px",
-  background: "#f3f4f6",
+  background: "#e2e8f0",
 };
 
 const td = {
   border: "1px solid #ddd",
   padding: "8px",
+};
+
+const inputSmall = {
+  width: "90%",
+  padding: "4px",
+  fontSize: "12px",
+  marginTop: "4px",
 };

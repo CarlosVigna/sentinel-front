@@ -1,14 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  listOccurrences,
-  resolveOccurrence,
-  cancelOccurrence,
-  reopenOccurrence,
-  updateOccurrence,
-} from "../services/occurrenceService";
-import { listCategories } from "../services/categoryService";
-import { listProtocolsByCategory } from "../services/protocolService";
+import { listOccurrences } from "../services/occurrenceService";
 
 export default function Occurrences() {
   const navigate = useNavigate();
@@ -19,7 +11,6 @@ export default function Occurrences() {
   const [occurrences, setOccurrences] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 NOVO
   const [filters, setFilters] = useState({
     plate: "",
     category: "",
@@ -77,12 +68,34 @@ export default function Occurrences() {
     <div style={{ padding: 20 }}>
       <h1>Ocorrências</h1>
 
+      {/* 🔥 BOTÕES DE STATUS (VOLTARAM) */}
+      <div style={{ marginBottom: 15, display: "flex", gap: 10 }}>
+        {["OPEN", "IN_PROGRESS", "RESOLVED", "CANCELED"].map((status) => (
+          <button
+            key={status}
+            onClick={() => navigate(`/occurrences?status=${status}`)}
+            style={{
+              padding: "6px 12px",
+              background: status === statusFromUrl ? "#2563eb" : "#e5e7eb",
+              color: status === statusFromUrl ? "white" : "black",
+              border: "none",
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th>
               Placa
+              <br />
               <input
+                style={inputStyle}
                 value={filters.plate}
                 onChange={(e) =>
                   setFilters({ ...filters, plate: e.target.value })
@@ -92,7 +105,9 @@ export default function Occurrences() {
 
             <th>
               Categoria
+              <br />
               <input
+                style={inputStyle}
                 value={filters.category}
                 onChange={(e) =>
                   setFilters({ ...filters, category: e.target.value })
@@ -102,7 +117,9 @@ export default function Occurrences() {
 
             <th>
               Protocolo
+              <br />
               <input
+                style={inputStyle}
                 value={filters.protocol}
                 onChange={(e) =>
                   setFilters({ ...filters, protocol: e.target.value })
@@ -112,7 +129,9 @@ export default function Occurrences() {
 
             <th>
               Observações
+              <br />
               <input
+                style={inputStyle}
                 value={filters.description}
                 onChange={(e) =>
                   setFilters({ ...filters, description: e.target.value })
@@ -135,17 +154,33 @@ export default function Occurrences() {
         </thead>
 
         <tbody>
-          {sorted.map((o) => (
-            <tr key={o.id}>
-              <td>{o.plate}</td>
-              <td>{o.categoryName}</td>
-              <td>{o.protocolName}</td>
-              <td>{o.description || "-"}</td>
-              <td>{formatDate(o.updatedAt)}</td>
+          {sorted.length === 0 ? (
+            <tr>
+              <td colSpan={5} style={{ textAlign: "center", padding: 20 }}>
+                Nenhuma ocorrência encontrada
+              </td>
             </tr>
-          ))}
+          ) : (
+            sorted.map((o) => (
+              <tr key={o.id}>
+                <td>{o.plate}</td>
+                <td>{o.categoryName}</td>
+                <td>{o.protocolName}</td>
+                <td>{o.description || "-"}</td>
+                <td>{formatDate(o.updatedAt)}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
   );
 }
+
+// 🔥 INPUT PEQUENO (RESOLVE O VISUAL)
+const inputStyle = {
+  width: "90%",
+  padding: "4px",
+  fontSize: "12px",
+  marginTop: "4px",
+};
