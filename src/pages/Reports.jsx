@@ -84,107 +84,115 @@ export default function Reports() {
   }
 
   async function exportPDF() {
-  const pdf = new jsPDF("landscape");
-  const pageWidth = pdf.internal.pageSize.getWidth();
+    const pdf = new jsPDF("landscape");
+    const pageWidth = pdf.internal.pageSize.getWidth();
 
-  let y = 12;
+    let y = 12;
 
-  // 🧠 CABEÇALHO BONITO
-  pdf.setFontSize(20);
-  pdf.setTextColor(15, 23, 42);
-  pdf.text("RELATÓRIO DE OCORRÊNCIAS", 10, y);
+    const logo = new Image();
+    logo.src = "/logo.png"; // ou base64 depois
 
-  y += 6;
+    await new Promise((resolve) => {
+      logo.onload = resolve;
+    });
 
-  pdf.setFontSize(12);
-  pdf.setTextColor(100);
-  pdf.text("Sistema Sentinel", 10, y);
-
-  y += 6;
-
-  pdf.setFontSize(10);
-  pdf.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, y);
-
-  y += 5;
-
-  pdf.text(`Emitido por: Operador`, 10, y);
-
-  y += 8;
-
-  // 🔥 LINHA DIVISÓRIA
-  pdf.setDrawColor(180);
-  pdf.line(10, y, pageWidth - 10, y);
-
-  y += 8;
-
-  // 📊 CABEÇALHO DA TABELA
-  pdf.setFontSize(11);
-  pdf.setFont(undefined, "bold");
-  pdf.setTextColor(0);
-
-  pdf.text("Placa", 10, y);
-  pdf.text("Categoria", 55, y);
-  pdf.text("Status", 120, y);
-  pdf.text("Observações", 165, y);
-  pdf.text("Atualizado", 250, y);
-
-  pdf.setFont(undefined, "normal");
-
-  y += 5;
-
-  pdf.setDrawColor(200);
-  pdf.line(10, y, pageWidth - 10, y);
-
-  y += 6;
-
-  // 📊 LINHAS
-  sorted.forEach((o) => {
-    if (y > 185) {
-      pdf.addPage();
-      y = 12;
-    }
-
-    const status = formatStatus(o.status);
-    const desc = (o.description || "-").slice(0, 90);
-
-    pdf.setFontSize(9);
-    pdf.setTextColor(20);
-
-    pdf.text(o.plate || "-", 10, y);
-    pdf.text(o.category || "-", 55, y);
-    pdf.text(status, 120, y);
-    pdf.text(desc, 165, y);
-    pdf.text(formatDate(o.updatedAt), 250, y);
+    pdf.addImage(logo, "PNG", 10, 5, 30, 15);
+    // 🧠 CABEÇALHO BONITO
+    pdf.setFontSize(20);
+    pdf.setTextColor(15, 23, 42);
+    pdf.text("RELATÓRIO DE OCORRÊNCIAS", 10, y);
 
     y += 6;
-  });
 
-  // 🔻 RODAPÉ BONITO
-  const totalPages = pdf.getNumberOfPages();
+    pdf.setFontSize(12);
+    pdf.setTextColor(100);
+    pdf.text("Sistema Sentinel", 10, y);
 
-  for (let i = 1; i <= totalPages; i++) {
-    pdf.setPage(i);
+    y += 6;
 
-    pdf.setFontSize(9);
-    pdf.setTextColor(120);
+    pdf.setFontSize(10);
+    pdf.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, 10, y);
 
-    pdf.line(10, 195, pageWidth - 10, 195);
+    y += 5;
 
-    pdf.text(
-      `Sentinel • Relatório automático • ${new Date().getFullYear()}`,
-      10,
-      200
-    );
+    pdf.text(`Emitido por: Operador`, 10, y);
 
-    pdf.text(
-      `Página ${i} de ${totalPages}`,
-      pageWidth - 40,
-      200
-    );
+    y += 8;
+
+    // 🔥 LINHA DIVISÓRIA
+    pdf.setDrawColor(180);
+    pdf.line(10, y, pageWidth - 10, y);
+
+    y += 8;
+
+    // 📊 CABEÇALHO DA TABELA
+    pdf.setFontSize(11);
+    pdf.setFont(undefined, "bold");
+    pdf.setTextColor(0);
+
+    pdf.text("Placa", 10, y);
+    pdf.text("Categoria", 55, y);
+    pdf.text("Status", 120, y);
+    pdf.text("Observações", 165, y);
+    pdf.text("Atualizado", 250, y);
+
+    pdf.setFont(undefined, "normal");
+
+    y += 5;
+
+    pdf.setDrawColor(200);
+    pdf.line(10, y, pageWidth - 10, y);
+
+    y += 6;
+
+    // 📊 LINHAS
+    sorted.forEach((o) => {
+      if (y > 185) {
+        pdf.addPage();
+        y = 12;
+      }
+
+      const status = formatStatus(o.status);
+      const desc = (o.description || "-").slice(0, 90);
+
+      pdf.setFontSize(9);
+      pdf.setTextColor(20);
+
+      pdf.text(o.plate || "-", 10, y);
+      pdf.text(o.category || "-", 55, y);
+      pdf.text(status, 120, y);
+      pdf.text(desc, 165, y);
+      pdf.text(formatDate(o.updatedAt), 250, y);
+
+      y += 6;
+    });
+
+    // 🔻 RODAPÉ BONITO
+    const totalPages = pdf.getNumberOfPages();
+
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+
+      pdf.setFontSize(9);
+      pdf.setTextColor(120);
+
+      pdf.line(10, 195, pageWidth - 10, 195);
+
+      pdf.text(
+        `Sentinel • Relatório automático • ${new Date().getFullYear()}`,
+        10,
+        200
+      );
+
+      pdf.text(
+        `Página ${i} de ${totalPages}`,
+        pageWidth - 40,
+        200
+      );
+    }
+
+    pdf.save("relatorio-sentinel.pdf");
   }
-
-  pdf.save("relatorio-sentinel.pdf");
-}
 
   function copyReport() {
     const text = sorted
@@ -256,28 +264,28 @@ Atualizado: ${formatDate(o.updatedAt)}
                 Placa
                 <input style={inputSmall} onChange={(e) =>
                   setColumnFilter({ ...columnFilter, plate: e.target.value })
-                }/>
+                } />
               </th>
 
               <th style={th}>
                 Categoria
                 <input style={inputSmall} onChange={(e) =>
                   setColumnFilter({ ...columnFilter, category: e.target.value })
-                }/>
+                } />
               </th>
 
               <th style={th}>
                 Status
                 <input style={inputSmall} onChange={(e) =>
                   setColumnFilter({ ...columnFilter, status: e.target.value })
-                }/>
+                } />
               </th>
 
               <th style={th}>
                 Observações
                 <input style={inputSmall} onChange={(e) =>
                   setColumnFilter({ ...columnFilter, description: e.target.value })
-                }/>
+                } />
               </th>
 
               <th style={th}>Atualizado</th>
